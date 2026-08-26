@@ -14,14 +14,18 @@ def _create_circle(self, x, y, r, **kwargs):
     return self.create_oval(x-r, y-r, x+r, y+r, **kwargs)
 tk.Canvas.create_circle = _create_circle
 
-
+'''create a map with line as links and circle as hub'''
 canvas.create_line(400, 400, 600, 400, width=3)
 canvas.create_line(400, 400, 800, 400, width=3)
 canvas.create_line(400, 400, 1000, 400, width=3)
-canvas.create_circle(400, 400, 50, fill="green", outline="green")
-canvas.create_circle(600, 400, 50, fill="blue", outline="blue")
-canvas.create_circle(800, 400, 50, fill="blue", outline="blue")
-canvas.create_circle(1000, 400, 50, fill="red", outline="blue")
+canvas.create_line(400, 400, 1000, 100, width=3)
+circle_size = 70;
+outline_with = circle_size/10;
+canvas.create_circle(400, 400, circle_size, fill="green", outline="blue", width=outline_with)
+canvas.create_circle(600, 400, circle_size, fill="blue", outline="blue")
+canvas.create_circle(800, 400, circle_size, fill="blue", outline="blue")
+canvas.create_circle(1000, 400, circle_size, fill="red", outline="blue")
+canvas.create_circle(1000, 100, circle_size, fill="red", outline="blue")
 
 root.title("FLY IN")
 root.mainloop()

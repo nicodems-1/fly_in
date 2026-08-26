@@ -1,5 +1,4 @@
-MAIN = src.main
-OUTPUT = data/output
+MAIN = build/srcs/src.main
 
 
 install:
