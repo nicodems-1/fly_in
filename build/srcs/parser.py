@@ -1,4 +1,4 @@
-from models import Hub, Connection, Context
+from models import Hub, Connection, Context, Metadata
 
 def parsing():
     nb_of_drones = 0
@@ -18,11 +18,11 @@ def parsing():
                 x_coor = splitted[2]
                 y_coor = splitted[3]
                 if(len(splitted) == 5):
-                    metadata = splitted[4].strip("\n")
+                    parsing_metadata(splitted[4].strip("\n"))
                 print (f"{role}\n{name}\n{x_coor}\n{y_coor}\n{metadata}\n")
 
 parsing()
 
 def parsing_metadata(metadata: str):
-    ...
+    
 

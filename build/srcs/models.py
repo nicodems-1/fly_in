@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, PositiveInt
 from typing import Optional, Literal
 
 
@@ -18,15 +18,16 @@ class Connection(BaseModel):
 class Context(BaseModel):
     '''context contain all the infos from class hub and class connection, we'll use context
     for the calculations and the display'''
-    nb_of_drones: int
+    nb_of_drones: PositiveInt
     hubs: dict[str, Hub]
     connections: list[Connection]
 
-class Metadata(BaseModel):
-    '''class containing different options for base model such as:
-     max_link_capacity, max_drone capacity, zone, color '''
+class HubMetadata(BaseModel):
     color: Optional[str] = None
-    max_drones: Optional[int] = None
-    max_link_capacity: Optional[int] = None
-    zone: Optional[Literal["normal", "restricted", "priority", "blocked"]] = None
+    max_drones: Optional[PositiveInt] = None
+    zone: Optional[Literal["normal", "restricted", "priority", "blocked"]] = (None)
+
+
+class ConnectionMetadata(BaseModel):
+    max_link_capacity: Optional[PositiveInt] = None
     
