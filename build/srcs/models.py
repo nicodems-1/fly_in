@@ -21,3 +21,12 @@ class Context(BaseModel):
     nb_of_drones: int
     hubs: dict[str, Hub]
     connections: list[Connection]
+
+class Metadata(BaseModel):
+    '''class containing different options for base model such as:
+     max_link_capacity, max_drone capacity, zone, color '''
+    color: Optional[str] = None
+    max_drones: Optional[int] = None
+    max_link_capacity: Optional[int] = None
+    zone: Optional[Literal["normal", "restricted", "priority", "blocked"]] = None
+    
