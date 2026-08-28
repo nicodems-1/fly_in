@@ -1,17 +1,21 @@
 from models import Hub, Connection, Context, HubMetadata, ConnectionMetadata
 
+def extract_line(raw_line: str) ->tuple[str, str | None]:
+    if "[" in raw_line:
+        splitted = raw_line.split("[", 1)
+        return (splitted[0], splitted[1].strip().strip("]"))
+        print("meta")
+    else:
+        return(raw_line.strip(), None)
+    
 def parsing_meta(metadata: str)->dict[str, str] or None:
     meta_dict = {}
-    if(metadata.endswith("]")):
-        clean_meta = metadata.strip("]")
-        splitted_meta = clean_meta.split()
-        for item in splitted_meta:
-            key, val = item.split("=")
-            meta_dict[key] = val
-        print(f"{meta_dict} metadict_connection")
-        return(meta_dict)
-    else:
-        raise ValueError("Error line 33, metadata format does not correspond")
+    splitted_meta = metadata.split()
+    for item in splitted_meta:
+        key, val = item.split("=")
+        meta_dict[key] = val
+    return(meta_dict)
+
 
 def parsing() -> Context:
     nb_drones = 0
@@ -21,39 +25,37 @@ def parsing() -> Context:
         for x in f:
             if x.startswith("#"):
                 continue
+
             if x.startswith("nb_drones"):
                 nb_drones = int(x.split(":")[1].strip())
+
             if(x.startswith("start_hub") or x.startswith("hub") or x.startswith("end_hub")):
-                hub_split = x.strip().split()
-                if("[" in x):
-                    split_meta = x.split("[")
-                    hub_data = split_meta[0]
-                    metadata = split_meta[1].strip()
-                    parsing_meta(metadata)
-                    hub_split = hub_data.strip().split()
-                x_coor = hub_split[2]
-                y_coor = hub_split[3]
-                name = hub_split[1]
-                role = hub_split[0].strip(":")
-                my_hub = Hub(x=x_coor, y=y_coor, name=name, role=role)
+                hub_data, metadata = extract_line(x)
+                
+                if(metadata != None):
+                    meta_dict = parsing_meta(metadata)
+                    my_meta = HubMetadata(**meta_dict)
+
+                tokens = hub_data.split()
+                role, name, x, y = tokens
+                my_hub = Hub(x=x, y=y, name=name, role=role.strip(":"), metadata=my_meta)
                 hubs.update({name: my_hub})
+
             if(x.startswith("connection")):
-                co_data = x.split(":")[1]
-                if("[" in x):
-                    split_meta = x.split("[")
-                    co_data = split_meta[0]
-                    metadata = split_meta[1].strip()
-                    parsing_meta(metadata)
-                co_split = co_data.strip().split("-")
-                source = co_split[0]
-                target = co_split[1]
-                my_connection = Connection(source=source, target=target)
+                co_data, metadata = extract_line(x)
+
+                if (metadata != None):
+                    meta_dict = parsing_meta(metadata)
+                    my_meta = ConnectionMetadata(**meta_dict)
+
+                tokens = co_data.strip("connections:").strip().split("-")
+                source, target = tokens
+                my_connection = Connection(source=source, target=target, metadata=my_meta)
                 connections.append(my_connection)
-        print(connections, hubs)
+        print(connections)
         return(Context(nb_drones=nb_drones, hubs=hubs, connections=connections))
 
 parsing()
-
 
         
 
