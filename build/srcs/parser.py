@@ -16,13 +16,13 @@ def parsing_meta(metadata: str)->dict[str, str] or None:
     return(meta_dict)
 
 
-def parsing() -> Context:
+def parsing(path: str) -> Context:
     '''Parse separately connections and hubs in two differents classes, parse metadata for
     connection and for hubs'''
     nb_drones = 0
     hubs: dict[str, Hub] = {}
     connections: list[Connection] = []
-    with open("maps/easy/01_linear_path.txt") as f:
+    with open(path) as f:
         for x in f:
             if x.startswith("#"):
                 continue
@@ -56,10 +56,6 @@ def parsing() -> Context:
                 my_connection = Connection(source=source, target=target, metadata=my_meta)
                 connections.append(my_connection)
 
-        print(connections)
         return(Context(nb_drones=nb_drones, hubs=hubs, connections=connections))
-
-parsing()
-
         
 
