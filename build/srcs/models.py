@@ -25,7 +25,7 @@ class Connection(BaseModel):
     '''class that contains the links between the differents hubs'''
     source: str
     target: str
-    metadata: Optional[HubMetadata] = None
+    metadata: Optional[ConnectionMetadata] = None
 
 class Context(BaseModel):
     '''context contain all the infos from class hub and class connection, we'll use context

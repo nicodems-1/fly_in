@@ -59,7 +59,7 @@ hub: priority_trap2 11 1 [zone=priority color=gold]
 hub: priority_dead 12 1 [color=black]
 
 hub: priority_trap3 10 -1 [zone=priority color=gold]
-hub: priority_trap4 11 -1 [zone=priority color=gold]
+hub: priority_trap4 11 -1 [zone=priority color=gold
 hub: priority_dead2 12 -1 [color=black]
 
 # === LAYER 4: The Convergence Hell ===
