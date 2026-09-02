@@ -1,4 +1,4 @@
-from models import Hub, Connection, Context, HubMetadata, ConnectionMetadata
+from .models import Hub, Connection, Context, HubMetadata, ConnectionMetadata
 
 def extract_line(raw_line: str) ->tuple[str, str | None]:
     if "[" in raw_line:
@@ -7,7 +7,7 @@ def extract_line(raw_line: str) ->tuple[str, str | None]:
     else:
         return(raw_line.strip(), None)
     
-def parsing_meta(metadata: str)->dict[str, str] or None:
+def parsing_meta(metadata: str)->dict[str, str] | None:
     meta_dict = {}
     splitted_meta = metadata.split()
     for item in splitted_meta:

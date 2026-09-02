@@ -1,4 +1,4 @@
-MAIN = build/srcs/src.main
+MAIN = src
 
 
 install:

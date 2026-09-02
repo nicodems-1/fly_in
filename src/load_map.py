@@ -1,5 +1,5 @@
 import tkinter as tk
-from models import Context, Hub
+from .models import Context, Hub
 
 class MapVisualizer():
     def __init__(self):
@@ -20,8 +20,8 @@ class MapVisualizer():
         y_min = min([hub.y for hub in hubs.values()])
         print(f"screen height    {self.screen_height}")
         print(f"screen width    {self.screen_width}")
-        scale = 100
-        circle_size = 50
+        scale = 150
+        circle_size = 40
         offset_x = (self.screen_width - (x_max - x_min)*scale)/2
         for hub in hubs.values():
             x = hub.x*scale + offset_x
