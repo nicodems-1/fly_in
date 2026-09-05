@@ -9,6 +9,11 @@ class MapVisualizer():
         self.canvas = tk.Canvas(self.root, width=self.screen_width, height=self.screen_height, borderwidth=0, highlightthickness=0,
                        bg="white")
 
+    def move_png(self):
+        self.canvas.pack()
+        img = tk.PhotoImage(file="drone.png")
+        image = self.canvas.create_image(100, 100, anchor=tk.NW, image=img)
+
     def _create_circle(self, x, y, r, **kwargs):
         return self.canvas.create_oval(x-r, y-r, x+r, y+r, **kwargs)
 
@@ -48,5 +53,6 @@ class MapVisualizer():
     def load_map(self, context):
         self.canvas.grid()
         self.create_hubs(context)
+        self.move_png()
         self.root.title("FLY IN")
         self.root.mainloop()
