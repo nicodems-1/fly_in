@@ -19,6 +19,7 @@ canvas.create_line(400, 400, 600, 400, width=3)
 canvas.create_line(400, 400, 800, 400, width=3)
 canvas.create_line(400, 400, 1000, 400, width=3)
 canvas.create_line(400, 400, 1000, 100, width=3)
+canvas.create_rectangle(120, 450, 450, 789)
 circle_size = 70;
 outline_with = circle_size/10;
 canvas.create_circle(400, 400, circle_size, fill="green", outline="blue", width=outline_with)
@@ -26,6 +27,5 @@ canvas.create_circle(600, 400, circle_size, fill="blue", outline="blue")
 canvas.create_circle(800, 400, circle_size, fill="blue", outline="blue")
 canvas.create_circle(1000, 400, circle_size, fill="red", outline="blue")
 canvas.create_circle(1000, 100, circle_size, fill="red", outline="blue")
-
-root.title("FLY IN")
+root.title("TITRE")
 root.mainloop()
