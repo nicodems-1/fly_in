@@ -6,13 +6,12 @@ class MapVisualizer():
         self.root = tk.Tk()
         self.screen_width= self.root.winfo_screenwidth()*0.7
         self.screen_height = self.root.winfo_screenheight()*0.7
+        self.img = tk.PhotoImage(file="drone.png").subsample(35)
         self.canvas = tk.Canvas(self.root, width=self.screen_width, height=self.screen_height, borderwidth=0, highlightthickness=0,
                        bg="white")
 
-    def move_png(self):
-        self.canvas.pack()
-        img = tk.PhotoImage(file="drone.png")
-        image = self.canvas.create_image(100, 100, anchor=tk.NW, image=img)
+    def spawn_png(self):
+        image = self.canvas.create_image(100, 100, anchor=tk.NW, image=self.img)
 
     def _create_circle(self, x, y, r, **kwargs):
         return self.canvas.create_oval(x-r, y-r, x+r, y+r, **kwargs)
@@ -24,8 +23,6 @@ class MapVisualizer():
         x_min = min([hub.x for hub in hubs.values()])
         y_max = max([hub.y for hub in hubs.values()])
         y_min = min([hub.y for hub in hubs.values()])
-        print(f"screen height    {self.screen_height}")
-        print(f"screen width    {self.screen_width}")
 
         dx = (x_max - x_min) or 1
         dy = (y_max - y_min) or 1
@@ -33,7 +30,6 @@ class MapVisualizer():
         scale_y = self.screen_height / dy
 
         scale = min(scale_x, scale_y) - (min(scale_x, scale_y)/3)
-        print(scale)
         circle_size = scale/3
         offset_x = (self.screen_width - (dx*scale))/2
         offset_y = (self.screen_height - (dy*scale) + 2 * circle_size)/2
@@ -52,7 +48,7 @@ class MapVisualizer():
 
     def load_map(self, context):
         self.canvas.grid()
+        self.spawn_png()
         self.create_hubs(context)
-        self.move_png()
         self.root.title("FLY IN")
         self.root.mainloop()
