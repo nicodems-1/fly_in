@@ -1,0 +1,8 @@
+Visualizer : Load the map and size it accordingly to windows size
+
+Bfs: Check if the map has a valid exit (into the parsing)
+
+Djikstra: Calculate with weight system the drone path
+
+Drone_mover: Load Drones across the visualized maps after djikstra algo
+
