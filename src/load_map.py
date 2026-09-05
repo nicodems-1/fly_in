@@ -14,6 +14,8 @@ class MapVisualizer():
         self.y_min = 0
         self.y_max = 0
         self.scale = 0
+        self.offset_x = 0
+        self.offset_y = 0
 
     def spawn_png(self):
         image = self.canvas.create_image(100, 100, anchor=tk.NW, image=self.img)
@@ -23,13 +25,12 @@ class MapVisualizer():
 
     def setup_map_data(self, context: Context):
         hubs = context.hubs
-        connections = context.connections
 
-        self.x_max = max([hub.x for hub in hubs.values()])
-        self.x_min = min([hub.x for hub in hubs.values()])
+        self.x_max = max(hub.x for hub in hubs.values())
+        self.x_min = min(hub.x for hub in hubs.values())
 
-        self.y_max = max([hub.y for hub in hubs.values()])
-        self.y_min = min([hub.y for hub in hubs.values()])
+        self.y_max = max(hub.y for hub in hubs.values())
+        self.y_min = min(hub.y for hub in hubs.values())
 
         dx = (self.x_max - self.x_min) or 1
         dy = (self.y_max - self.y_min) or 1
@@ -41,13 +42,14 @@ class MapVisualizer():
         final_scale = full_scale - padding
         self.scale = final_scale
 
+        self.offset_x = (self.screen_width - (dx*self.scale))/2
+        self.offset_y = (self.screen_height - (dy*self.scale) + 2 * (self.scale/3))/2
+
     def get_x_real_coords(self, x_coords):
-        offset_x = (self.screen_width - ((self.x_max-self.x_min)*self.scale))/2
-        return((x_coords - self.x_min)*self.scale + offset_x)
+        return((x_coords - self.x_min)*self.scale + self.offset_x)
 
     def get_y_real_coords(self, y_coords):
-        offset_y = (self.screen_height - ((self.y_max - self.y_min)*self.scale) + 2 * (self.scale/3))/2
-        return((self.y_max - y_coords)*self.scale + offset_y)
+        return((self.y_max - y_coords)*self.scale + self.offset_y)
 
     def create_hubs(self, context: Context):
         hubs = context.hubs
