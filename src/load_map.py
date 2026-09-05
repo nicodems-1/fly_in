@@ -4,8 +4,8 @@ from .models import Context, Hub
 class MapVisualizer():
     def __init__(self):
         self.root = tk.Tk()
-        self.screen_width= self.root.winfo_screenwidth()*0.7
-        self.screen_height = self.root.winfo_screenheight()*0.7
+        self.screen_width= self.root.winfo_screenwidth()*0.97
+        self.screen_height = self.root.winfo_screenheight()*0.97
         self.img = tk.PhotoImage(file="drone.png").subsample(35)
         self.canvas = tk.Canvas(self.root, width=self.screen_width, height=self.screen_height, borderwidth=0, highlightthickness=0,
                        bg="white")
@@ -16,6 +16,7 @@ class MapVisualizer():
         self.scale = 0
         self.offset_x = 0
         self.offset_y = 0
+        self.circle_size = 0
 
     def spawn_png(self):
         image = self.canvas.create_image(100, 100, anchor=tk.NW, image=self.img)
@@ -35,15 +36,15 @@ class MapVisualizer():
         dx = (self.x_max - self.x_min) or 1
         dy = (self.y_max - self.y_min) or 1
 
-        scale_x = self.screen_width / dx
-        scale_y = self.screen_height / dy
+        scale_x = (self.screen_width / dx)
+        scale_y = (self.screen_height / dy)
         full_scale = min(scale_x, scale_y)
-        padding = (min(scale_x, scale_y)/3)
-        final_scale = full_scale - padding
+        final_scale = full_scale * 0.80
         self.scale = final_scale
+        self.circle_size = self.scale/4
 
         self.offset_x = (self.screen_width - (dx*self.scale))/2
-        self.offset_y = (self.screen_height - (dy*self.scale) + 2 * (self.scale/3))/2
+        self.offset_y = (self.screen_height - (dy*self.scale))/2
 
     def get_x_real_coords(self, x_coords):
         return((x_coords - self.x_min)*self.scale + self.offset_x)
@@ -54,7 +55,6 @@ class MapVisualizer():
     def create_hubs(self, context: Context):
         hubs = context.hubs
         connections = context.connections
-        circle_size = self.scale/3
         for connection in connections:
             x0 = self.get_x_real_coords(hubs[connection.source].x)
             y0 = self.get_y_real_coords(hubs[connection.source].y)
@@ -64,8 +64,8 @@ class MapVisualizer():
         for hub in hubs.values():
             x = self.get_x_real_coords(hub.x)
             y = self.get_y_real_coords(hub.y)
-            self._create_circle(x, y, circle_size, fill=hub.metadata.color)
-            self.canvas.create_text(x,y,fill="white",font="Times 10 italic bold",
+            self._create_circle(x, y, self.circle_size, fill=hub.metadata.color)
+            self.canvas.create_text(x,y - (self.circle_size+10),fill="black",font="Verdana 10 bold",
                             text=hub.name)
 
     def load_map(self, context):
