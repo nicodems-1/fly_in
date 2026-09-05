@@ -4,8 +4,8 @@ from .models import Context, Hub
 class MapVisualizer():
     def __init__(self):
         self.root = tk.Tk()
-        self.screen_width= self.root.winfo_screenwidth()*0.97
-        self.screen_height = self.root.winfo_screenheight()*0.97
+        self.screen_width= self.root.winfo_screenwidth()
+        self.screen_height = self.root.winfo_screenheight()
         self.img = tk.PhotoImage(file="drone.png").subsample(35)
         self.canvas = tk.Canvas(self.root, width=self.screen_width, height=self.screen_height, borderwidth=0, highlightthickness=0,
                        bg="white")
@@ -26,25 +26,30 @@ class MapVisualizer():
 
     def setup_map_data(self, context: Context):
         hubs = context.hubs
-
+        
+        safe_margin = 100
         self.x_max = max(hub.x for hub in hubs.values())
         self.x_min = min(hub.x for hub in hubs.values())
 
         self.y_max = max(hub.y for hub in hubs.values())
         self.y_min = min(hub.y for hub in hubs.values())
 
-        dx = (self.x_max - self.x_min) or 1
-        dy = (self.y_max - self.y_min) or 1
+        true_dx = (self.x_max - self.x_min)
+        true_dy = (self.y_max - self.y_min)
+        scale_dx = true_dx
+        scale_dy = true_dy
+        if(true_dx == 0):
+            scale_dx = 1
+        if(true_dy == 0):
+            scale_dy = 1
+        scale_x = (self.screen_width - (2 * safe_margin)) / scale_dx
+        scale_y = (self.screen_height - (2 * safe_margin)) / scale_dy
+        self.scale = min(scale_x, scale_y)
+        ideal_size = self.scale/4
+        self.circle_size = max(5, min(ideal_size, 60))
 
-        scale_x = (self.screen_width / dx)
-        scale_y = (self.screen_height / dy)
-        full_scale = min(scale_x, scale_y)
-        final_scale = full_scale * 0.80
-        self.scale = final_scale
-        self.circle_size = self.scale/4
-
-        self.offset_x = (self.screen_width - (dx*self.scale))/2
-        self.offset_y = (self.screen_height - (dy*self.scale))/2
+        self.offset_x = ((self.screen_width - (true_dx*self.scale)))/2
+        self.offset_y = ((self.screen_height) - (true_dy*self.scale))/2
 
     def get_x_real_coords(self, x_coords):
         return((x_coords - self.x_min)*self.scale + self.offset_x)
