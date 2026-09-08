@@ -5,7 +5,7 @@ class HubMetadata(BaseModel):
     model_config = {"extra": "forbid"}
     color: Optional[str] = None
     max_drones: Optional[PositiveInt] = None
-    zone: Optional[Literal["normal", "restricted", "priority", "blocked"]] = (None)
+    zone: Optional[Literal["normal", "restricted", "priority", "blocked"]] = None
 
 
 class ConnectionMetadata(BaseModel):

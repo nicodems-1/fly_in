@@ -27,6 +27,10 @@ def parsing(path: str) -> Context:
             if x.startswith("#"):
                 continue
 
+            print(x.partition(":"))
+
+            
+
             if x.startswith("nb_drones"):
                 nb_drones = int(x.split(":")[1].strip())
 
