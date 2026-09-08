@@ -27,7 +27,7 @@ def parsing(path: str) -> Context:
             if x.startswith("#"):
                 continue
 
-            print(x.partition(":"))
+            # print(x.partition(":"))
 
             
 

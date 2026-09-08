@@ -10,15 +10,15 @@ class PathFinder():
     def __init__(self, context: Context):
         self.context = context
         self.came_from = {}
-        self.cost_so_far = 0
+        self.cost_so_far = {}
         self.queue = []
         self.flight_plan = []
         self.adj = {}
         self.start_hub = next(iter(context.hubs.values())).name
+        self.goal = 'goal'
 
     def get_cost(self, hub_name: str):
         metadata = self.context.hubs[hub_name].metadata
-        print(metadata)
         if metadata == None:
             return(1)
         if metadata.zone is None or metadata.zone == 'normal':
@@ -33,8 +33,8 @@ class PathFinder():
     def update_queue(self, hub_names):
         hub_content = self.context.hubs
         for hub in hub_names:
-            print(f"cost of moving toward the node == {self.get_cost(hub)}")
-            print(hub)
+            # print(f"cost of moving toward the node == {self.get_cost(hub)}")
+            # print(hub)
             heapq.heappush(self.queue, (self.get_cost(hub), hub))
 
     def build_adjacency_list(self):
@@ -52,16 +52,17 @@ class PathFinder():
     def engine_loop(self):
         heapq.heappush(self.queue, (0, self.start_hub))
         heapq.heapify(self.queue)
+        # print(self.adj['goal'])
         while self.queue:
             popped = heapq.heappop(self.queue)
             self.update_queue(self.adj[popped[1]])
-            # print(self.adj[popped[1]])
-            # print(self.adj)
-            # print(self.adj['start'])
-            # print(popped)
+            if self.adj[popped[1]] is None:
+                break
+            print(self.adj)
+            print(self.adj['start'])
+            print(popped)
     
     def run_djikstra(self):
-        print()
         self.build_adjacency_list()
         self.engine_loop()
         # print(self.adj)
