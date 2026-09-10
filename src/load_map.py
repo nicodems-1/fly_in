@@ -4,7 +4,7 @@ from .models import Context, Hub
 class MapVisualizer():
     def __init__(self):
         self.root = tk.Tk()
-        self.screen_width= self.root.winfo_screenwidth()*0.98
+        self.screen_width= self.root.winfo_screenwidth()*0.5
         self.screen_height = self.root.winfo_screenheight()
         self.img = tk.PhotoImage(file="drone.png").subsample(35)
         self.canvas = tk.Canvas(self.root, width=self.screen_width, height=self.screen_height, borderwidth=0, highlightthickness=0,

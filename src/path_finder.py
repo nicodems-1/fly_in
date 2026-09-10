@@ -9,15 +9,15 @@ from .models import Context, Hub
 class PathFinder():
     def __init__(self, context: Context):
         self.context = context
-        self.came_from = {}
-        self.cost_so_far = {}
+        self.came_from:dict[str, str|None] = {}
+        self.cost_so_far: dict[str, int] = {} #cout jusqu'a maintenant --> dict["hub4"] = 156 equivalent visited
         self.queue = []
         self.flight_plan = []
         self.adj = {}
         self.start_hub = next(iter(context.hubs.values())).name
         self.goal = 'goal'
 
-    def get_cost(self, hub_name: str):
+    def get_cost(self, hub_name: str)-> float|int:
         metadata = self.context.hubs[hub_name].metadata
         if metadata == None:
             return(1)
@@ -29,13 +29,18 @@ class PathFinder():
             return(float('inf'))
         if metadata.zone == 'restricted':
             return(2)
+        return(1)
 
-    def update_queue(self, hub_names):
+    def update_queue(self, hub_neighboor, previous_node):
         hub_content = self.context.hubs
-        for hub in hub_names:
-            # print(f"cost of moving toward the node == {self.get_cost(hub)}")
-            # print(hub)
-            heapq.heappush(self.queue, (self.get_cost(hub), hub))
+        for hub in hub_neighboor:
+            cost_current = self.get_cost(hub)
+            cost_previous = self.cost_so_far[previous_node]
+            challenger_cost = cost_current + cost_previous
+            if (hub not in self.cost_so_far) or (challenger_cost < self.cost_so_far[hub]):
+                self.cost_so_far.update({hub: challenger_cost})
+                self.came_from.update({hub: previous_node})
+                heapq.heappush(self.queue, (challenger_cost, hub))
 
     def build_adjacency_list(self):
         adjacency_list: dict[str, list[str]] = {}
@@ -50,20 +55,31 @@ class PathFinder():
         self.adj = adjacency_list
 
     def engine_loop(self):
+        self.cost_so_far.update({self.start_hub: 0})
         heapq.heappush(self.queue, (0, self.start_hub))
         heapq.heapify(self.queue)
-        # print(self.adj['goal'])
+        self.came_from[self.start_hub] = None
         while self.queue:
-            popped = heapq.heappop(self.queue)
-            self.update_queue(self.adj[popped[1]])
-            if self.adj[popped[1]] is None:
+            cost, popped = heapq.heappop(self.queue)
+            if popped == 'goal':
+                print("finished")
                 break
-            print(self.adj)
-            print(self.adj['start'])
-            print(popped)
+            self.update_queue(self.adj[popped], popped)
+            # print(popped)
     
+    def build_flight_plan(self):
+        zone = self.goal
+        self.flight_plan.append(self.goal)
+        while(zone != self.start_hub):
+            self.flight_plan.append(zone)
+            zone = self.came_from[zone]
+        self.flight_plan.append(self.start_hub)
+        self.flight_plan = self.flight_plan[:0:-1]
+
     def run_djikstra(self):
         self.build_adjacency_list()
         self.engine_loop()
-        # print(self.adj)
-               
+        self.build_flight_plan()
+        print(self.flight_plan)
+        print(self.cost_so_far[self.goal])
+        # print(self.came_from)
