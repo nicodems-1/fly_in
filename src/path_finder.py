@@ -69,12 +69,11 @@ class PathFinder():
     
     def build_flight_plan(self):
         zone = self.goal
-        self.flight_plan.append(self.goal)
         while(zone != self.start_hub):
             self.flight_plan.append(zone)
             zone = self.came_from[zone]
         self.flight_plan.append(self.start_hub)
-        self.flight_plan = self.flight_plan[:0:-1]
+        self.flight_plan = self.flight_plan[:-1]
 
     def run_djikstra(self):
         self.build_adjacency_list()
