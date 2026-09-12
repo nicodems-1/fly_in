@@ -65,7 +65,7 @@ class MapVisualizer():
             y0 = self.get_y_real_coords(hubs[connection.source].y)
             x1 = self.get_x_real_coords(hubs[connection.target].x)
             y1 = self.get_y_real_coords(hubs[connection.target].y)
-            self.canvas.create_line(x0, y0, x1, y1)
+            self.canvas.create_line(x0, y0, x1, y1, width=3)
         for hub in hubs.values():
             x = self.get_x_real_coords(hub.x)
             y = self.get_y_real_coords(hub.y)
