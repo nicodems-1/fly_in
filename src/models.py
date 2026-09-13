@@ -2,9 +2,10 @@ from pydantic import BaseModel, Field, PositiveInt
 from typing import Optional, Literal
 
 class HubMetadata(BaseModel):
-    model_config = {"extra": "forbid"}
+    # model_config = {"extra": "forbid"}
     color: Optional[str] = None
-    max_drones: Optional[PositiveInt] = None
+    max_drones_capacity: Optional[PositiveInt] = 0
+    current_nb_drones: Optional[PositiveInt]= 0
     zone: Optional[Literal["normal", "restricted", "priority", "blocked"]] = None
 
 

@@ -1,8 +1,3 @@
-# objectif, utiliser djikstra pour calculer le chemin le plus efficace pour un seul drone
-# trouver une table de correspondance facile coherente pour traiter ces donnees
-#  type dict[hub, list[hub]]
-
-# adjacency_list should be rebuilt every turn because of the different zones condition and capacity
 import heapq
 from .models import Context, Hub
 
@@ -19,6 +14,9 @@ class PathFinder():
 
     def get_cost(self, hub_name: str)-> float|int:
         metadata = self.context.hubs[hub_name].metadata
+        i = 0
+        if(metadata.current_nb_drones > metadata.max_drones_capacity):
+            i += 1
         if metadata == None:
             return(1)
         if metadata.zone is None or metadata.zone == 'normal':
@@ -73,8 +71,15 @@ class PathFinder():
             self.flight_plan.append(zone)
             zone = self.came_from[zone]
         self.flight_plan.append(self.start_hub)
-        self.flight_plan = self.flight_plan[:-1]
-
+        # self.flight_plan = self.flight_plan[:-1]
+    
+    def custom_flight_plan(self, current_hub: str):
+        #this one could run the engine again probs
+        zone = self.goal
+        while(zone != current_hub):
+            self.flight_plan.append(zone)
+            zone = self.came_from[zone]
+            
     def run_djikstra(self):
         self.build_adjacency_list()
         self.engine_loop()
