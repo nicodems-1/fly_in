@@ -1,3 +1,8 @@
+# objectif, utiliser djikstra pour calculer le chemin le plus efficace pour un seul drone
+# trouver une table de correspondance facile coherente pour traiter ces donnees
+#  type dict[hub, list[hub]]
+
+# adjacency_list should be rebuilt every turn because of the different zones condition and capacity
 import heapq
 from .models import Context, Hub
 
@@ -8,15 +13,24 @@ class PathFinder():
         self.cost_so_far: dict[str, int] = {} #cout jusqu'a maintenant --> dict["hub4"] = 156 equivalent visited
         self.queue = []
         self.flight_plan = []
-        self.adj = {}
+        self.adj = self.build_adjacency_list()
         self.start_hub = next(iter(context.hubs.values())).name
         self.goal = 'goal'
 
+    def build_adjacency_list(self) -> dict[str, list[str]]:
+        adjacency_list: dict[str, list[str]] = {}
+        connections = self.context.connections
+        hubs: dict[str, Hub] = self.context.hubs
+        for hub in hubs.values():
+            next_hubs = []
+            for connection in connections:
+                if hub.name in connection.source:
+                    next_hubs.append(hubs[connection.target].name)
+            adjacency_list.update({hub.name: next_hubs})
+        return(adjacency_list)
+
     def get_cost(self, hub_name: str)-> float|int:
         metadata = self.context.hubs[hub_name].metadata
-        i = 0
-        if(metadata.current_nb_drones > metadata.max_drones_capacity):
-            i += 1
         if metadata == None:
             return(1)
         if metadata.zone is None or metadata.zone == 'normal':
@@ -40,50 +54,29 @@ class PathFinder():
                 self.came_from.update({hub: previous_node})
                 heapq.heappush(self.queue, (challenger_cost, hub))
 
-    def build_adjacency_list(self):
-        adjacency_list: dict[str, list[str]] = {}
-        connections = self.context.connections
-        hubs: dict[str, Hub] = self.context.hubs
-        for hub in hubs.values():
-            next_hubs = []
-            for connection in connections:
-                if hub.name in connection.source:
-                    next_hubs.append(hubs[connection.target].name)
-            adjacency_list.update({hub.name: next_hubs})
-        self.adj = adjacency_list
 
-    def engine_loop(self):
-        self.cost_so_far.update({self.start_hub: 0})
-        heapq.heappush(self.queue, (0, self.start_hub))
+    def engine_loop(self, current_hub):
+        self.cost_so_far.update({current_hub: 0})
+        heapq.heappush(self.queue, (0, current_hub))
         heapq.heapify(self.queue)
-        self.came_from[self.start_hub] = None
+        self.came_from[current_hub] = None
         while self.queue:
             cost, popped = heapq.heappop(self.queue)
             if popped == 'goal':
-                print("finished")
                 break
             self.update_queue(self.adj[popped], popped)
-            # print(popped)
     
-    def build_flight_plan(self):
+    def build_flight_plan(self, current_hub) -> list[str]:
         zone = self.goal
-        while(zone != self.start_hub):
-            self.flight_plan.append(zone)
-            zone = self.came_from[zone]
-        self.flight_plan.append(self.start_hub)
-        # self.flight_plan = self.flight_plan[:-1]
-    
-    def custom_flight_plan(self, current_hub: str):
-        #this one could run the engine again probs
-        zone = self.goal
+        flight_plan = []
         while(zone != current_hub):
-            self.flight_plan.append(zone)
+            flight_plan.append(zone)
             zone = self.came_from[zone]
-            
-    def run_djikstra(self):
-        self.build_adjacency_list()
-        self.engine_loop()
-        self.build_flight_plan()
-        print(self.flight_plan)
-        print(self.cost_so_far[self.goal])
-        # print(self.came_from)
+        flight_plan.append(current_hub)
+        return(flight_plan[::-1])
+
+    def run_djikstra(self, current_hub) -> list[str]:
+        self.engine_loop(current_hub)
+        self.flight_plan = self.build_flight_plan(current_hub)
+        # print(f"Path found {self.flight_plan}")
+        return(self.flight_plan)
