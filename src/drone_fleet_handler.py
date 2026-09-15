@@ -28,21 +28,22 @@ class DronesFleetHandler():
         else:
             drone.current_hub = drone.flight_plan[0]
 
-    def print_drone_logs(self, drone: Drone):
-        print(f"{drone.drone_id}-{drone.current_hub}", end = " ")
+    def get_logs(self, drone: Drone):
+        return(f"{drone.drone_id}-{drone.current_hub} ")
 
     def handle_drones(self, nb_drones: int):
         self.nb_drones = nb_drones
         self.initalized_drone_array()
-        tick_simulation = 0
         count = 0
+        logs_list: list[str] = []
         while(count <= nb_drones):
-            tick_simulation += 1
-            print()
+            tick_log = ""
             for drone in self.drones:
                 if drone.current_hub == self.goal:
                     count += 1
                 drone.flight_plan = self.update_djikstra_path(drone)
-                # print(drone.flight_plan)
-                self.print_drone_logs(drone)
+                tick_log += self.get_logs(drone)
                 self.update_drone_pos(drone)
+            logs_list.append(tick_log)
+        print(logs_list)
+        return(logs_list)

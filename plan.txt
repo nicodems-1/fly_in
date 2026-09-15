@@ -6,3 +6,8 @@ Djikstra: Calculate with weight system the drone path
 
 Drone_mover: Load Drones across the visualized maps after djikstra algo
 
+
+
+Priorite: trier le dictionnaire voisins,
+
+Checker les connections dans les deux sens

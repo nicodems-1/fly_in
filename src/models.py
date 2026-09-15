@@ -4,13 +4,12 @@ from typing import Optional, Literal
 class HubMetadata(BaseModel):
     # model_config = {"extra": "forbid"}
     color: Optional[str] = None
-    max_drones_capacity: Optional[PositiveInt] = 0
-    current_nb_drones: Optional[PositiveInt]= 0
+    max_drones: Optional[PositiveInt] = None
     zone: Optional[Literal["normal", "restricted", "priority", "blocked"]] = None
 
 
 class ConnectionMetadata(BaseModel):
-    model_config = {"extra": "forbid"}
+    # model_config = {"extra": "forbid"}
     max_link_capacity: Optional[PositiveInt] = None
 
 
@@ -21,12 +20,16 @@ class Hub(BaseModel):
     name: str
     role: Literal["start_hub", "end_hub", "hub"]
     metadata: Optional[HubMetadata] = None
+    # max_drones_hub: Optional[int]
+    # current_nb_drones: Optional[int]
 
 class Connection(BaseModel):
     '''class that contains the links between the differents hubs'''
     source: str
     target: str
     metadata: Optional[ConnectionMetadata] = None
+    # max_link_capacity: int
+    # current_link_capacity: int
 
 class Context(BaseModel):
     '''context contain all the infos from class hub and class connection, we'll use context

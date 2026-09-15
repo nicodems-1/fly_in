@@ -4,9 +4,9 @@ from .models import Context, Hub
 class MapVisualizer():
     def __init__(self):
         self.root = tk.Tk()
-        self.screen_width= self.root.winfo_screenwidth()*0.5
+        self.screen_width= self.root.winfo_screenwidth()*1
         self.screen_height = self.root.winfo_screenheight()
-        self.img = tk.PhotoImage(file="drone.png").subsample(35)
+        # self.img = tk.PhotoImage(file="drone.png").subsample(35)
         self.canvas = tk.Canvas(self.root, width=self.screen_width, height=self.screen_height, borderwidth=0, highlightthickness=0,
                        bg="white")
         self.x_min = 0
@@ -17,6 +17,7 @@ class MapVisualizer():
         self.offset_x = 0
         self.offset_y = 0
         self.circle_size = 0
+        self.portal = self.img = tk.PhotoImage(file="portal.png").subsample(3)
 
     def spawn_png(self):
         image = self.canvas.create_image(100, 100, anchor=tk.NW, image=self.img)
@@ -69,14 +70,15 @@ class MapVisualizer():
         for hub in hubs.values():
             x = self.get_x_real_coords(hub.x)
             y = self.get_y_real_coords(hub.y)
-            self._create_circle(x, y, self.circle_size, fill=hub.metadata.color)
+            image = self.canvas.create_image(x, y, anchor='center', image=self.portal)
+            # self._create_circle(x, y, self.circle_size, fill=hub.metadata.color)
             self.canvas.create_text(x,y - (self.circle_size+10),fill="black",font="Verdana 10 bold",
                             text=hub.name)
 
     def load_map(self, context):
         self.setup_map_data(context)
         self.canvas.grid()
-        self.spawn_png()
+        # self.spawn_png()
         self.create_hubs(context)
         self.root.title("FLY IN")
-        self.root.mainloop()
+        return(self.canvas, self.root)
