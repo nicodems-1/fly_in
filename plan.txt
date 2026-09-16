@@ -11,3 +11,13 @@ Drone_mover: Load Drones across the visualized maps after djikstra algo
 Priorite: trier le dictionnaire voisins,
 
 Checker les connections dans les deux sens
+
+Logs system --> a chaque tour la position du drone vs log demande par l'exercice : filtrer log system pour avoir que les mouvements
+
+Updater l'algo pour prendre en compte les capacite des noeuds et des connections 
+
+Visuel : stocker drone sur connection ?? 
+
+Deux possibilite, ou bien on stoque le nb drone en dessous du hub en dur ou bien on offset les drones ? 
+
+Parsing --> pas de pydantic mais uniquement du ligne par ligne a la mano pour la fin
