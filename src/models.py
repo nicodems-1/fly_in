@@ -4,7 +4,7 @@ from typing import Optional, Literal
 class HubMetadata(BaseModel):
     # model_config = {"extra": "forbid"}
     color: Optional[str] = None
-    max_drones: Optional[PositiveInt] = None
+    max_drones: Optional[PositiveInt] = 0
     zone: Optional[Literal["normal", "restricted", "priority", "blocked"]] = None
 
 
@@ -20,8 +20,7 @@ class Hub(BaseModel):
     name: str
     role: Literal["start_hub", "end_hub", "hub"]
     metadata: Optional[HubMetadata] = None
-    # max_drones_hub: Optional[int]
-    # current_nb_drones: Optional[int]
+    current_nb_drones: Optional[int] = 0
 
 class Connection(BaseModel):
     '''class that contains the links between the differents hubs'''
