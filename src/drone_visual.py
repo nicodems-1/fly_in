@@ -41,7 +41,7 @@ class DroneMoves():
 
     def display_drones(self):
         self.tick_function(0)
-        self.root.mainloop()
+        # self.root.mainloop()
 
         '''display the drone in the line '''
         

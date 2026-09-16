@@ -15,7 +15,7 @@ class PathFinder():
         self.flight_plan = []
         self.adj = self.build_adjacency_list()
         self.start_hub = next(iter(context.hubs.values())).name
-        self.goal = 'goal'
+        self.goal = next(hub for hub in context.hubs.values() if hub.role == "end_hub").name
 
     def build_adjacency_list(self) -> dict[str, list[str]]:
         adjacency_list: dict[str, list[str]] = {}

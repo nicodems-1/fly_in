@@ -11,7 +11,7 @@ class DronesFleetHandler():
     def __init__(self, context: Context) -> None:
         self.drones: list[Drone] = []
         self.nb_drones = 0
-        self.goal = 'goal'
+        self.goal = next(hub for hub in context.hubs.values() if hub.role == "end_hub").name
         self.path_finder = PF(context)
 
     def initalized_drone_array(self) -> None:
