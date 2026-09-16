@@ -7,11 +7,12 @@ class DroneMoves():
         self.root = root
         self.context = context
         self.nb_drone = context.nb_drones
-        self.img = tk.PhotoImage(file="Rick.png").subsample(9)
+        self.img = tk.PhotoImage(file="rick.png").subsample(25)
         self.canvas = canvas
         self.load_map = my_visual
+        self.droneid_png: dict[id, png_id] = {}
         self.lbl = tk.Label(self.root, text="1", font=('calibri', 40, 'bold'), background='purple',foreground='white')
-
+    
     def get_simulation_turn(self, move):
         return(move.split())
 
@@ -19,12 +20,20 @@ class DroneMoves():
         pass
 
     def process(self, simulation):
+        '''Need to know the last img pos to calculate the lenght of movment needeed'''
         for drone in simulation:
-            _, next_hub = drone.split("-")
-            x = self.load_map.get_x_real_coords(self.context.hubs[next_hub].x)
-            y = self.load_map.get_y_real_coords(self.context.hubs[next_hub].y)
-            image = self.canvas.create_image(x, y, anchor=tk.NW, image=self.img)
-            # sleep(1)
+            id, next_hub = drone.split("-")
+            x_target = self.load_map.get_x_real_coords(self.context.hubs[next_hub].x)
+            y_target = self.load_map.get_y_real_coords(self.context.hubs[next_hub].y)
+            if id not in self.droneid_png:
+                img_id = self.canvas.create_image(x_target, y_target, anchor='center', image=self.img)
+                self.droneid_png.update({id: img_id})
+            else:
+                img_id = self.droneid_png[id]
+                current_x, current_y = self.canvas.coords(img_id)
+                dx = x_target - current_x
+                dy = y_target - current_y
+                self.canvas.move(img_id, dx, dy)
 
     def tick_function(self, current_index):
         '''process one move from the moves list'''
@@ -34,14 +43,12 @@ class DroneMoves():
             simulation = self.get_simulation_turn(self.moves[current_index])
             self.process(simulation)
             self.tick_counter(current_index)
-            self.root.after(700, self.tick_function, current_index + 1)
+            self.root.after(1000, self.tick_function, current_index + 1)
 
     def tick_counter(self, current_index):
         self.lbl.config(text=str(current_index))
 
     def display_drones(self):
         self.tick_function(0)
-        # self.root.mainloop()
-
         '''display the drone in the line '''
         
