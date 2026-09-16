@@ -1,5 +1,6 @@
 import tkinter as tk
 from .models import Context
+from tkinter import font
 
 class DroneMoves():
     def __init__(self, moves: list[str], context: Context, canvas, root, my_visual):
@@ -7,12 +8,12 @@ class DroneMoves():
         self.root = root
         self.context = context
         self.nb_drone = context.nb_drones
-        self.img = tk.PhotoImage(file="rick.png").subsample(25)
+        self.img = tk.PhotoImage(file="drone.png").subsample(30)
         self.canvas = canvas
         self.load_map = my_visual
         self.droneid_png: dict[id, png_id] = {}
-        self.lbl = tk.Label(self.root, text="1", font=('calibri', 40, 'bold'), background='purple',foreground='white')
-    
+        self.label = tk.Label(root, font=('Helvetica 40 bold'), background='green', foreground='white')
+        self.label.place(x=50, y=50)
     def get_simulation_turn(self, move):
         return(move.split())
 
@@ -41,12 +42,12 @@ class DroneMoves():
             return
         else:
             simulation = self.get_simulation_turn(self.moves[current_index])
-            self.process(simulation)
             self.tick_counter(current_index)
+            self.process(simulation)
             self.root.after(1000, self.tick_function, current_index + 1)
 
     def tick_counter(self, current_index):
-        self.lbl.config(text=str(current_index))
+        self.label['text'] = f"Tick_counter {current_index}"
 
     def display_drones(self):
         self.tick_function(0)
