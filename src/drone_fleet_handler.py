@@ -13,6 +13,7 @@ class DronesFleetHandler():
         self.nb_drones = 0
         self.goal = next(hub for hub in context.hubs.values() if hub.role == "end_hub").name
         self.path_finder = PF(context)
+        self.hubs = context.hubs
 
     def initalized_drone_array(self) -> None:
         for i in range(self.nb_drones):
@@ -24,8 +25,14 @@ class DronesFleetHandler():
 
     def update_drone_pos(self, drone: Drone):
         if len(drone.flight_plan) > 1:
+            if(drone.current_hub != drone.flight_plan[1]):
+                self.hubs[drone.current_hub].current_nb_drones -= 1
+                self.hubs[drone.flight_plan[1]].current_nb_drones += 1
             drone.current_hub = drone.flight_plan[1]
         else:
+            if(drone.current_hub != drone.flight_plan[0]):
+                self.hubs[drone.current_hub].current_nb_drones -= 1
+                self.hubs[drone.flight_plan[0]].current_nb_drones += 1
             drone.current_hub = drone.flight_plan[0]
 
     def get_logs(self, drone: Drone):
@@ -38,6 +45,7 @@ class DronesFleetHandler():
         logs_list: list[str] = []
         while(count <= nb_drones):
             tick_log = ""
+            count = 1
             for drone in self.drones:
                 if drone.current_hub == self.goal:
                     count += 1

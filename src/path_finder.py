@@ -26,13 +26,21 @@ class PathFinder():
             for connection in connections:
                 if hub.name in connection.source:
                     next_hubs.append(hubs[connection.target].name)
+            next_hubs.append(hub.name)
             adjacency_list.update({hub.name: next_hubs})
         return(adjacency_list)
 
-    def get_cost(self, hub_name: str)-> float|int:
-        metadata = self.context.hubs[hub_name].metadata
+    def get_cost(self, next_hub: str, start_hub:str)-> float|int:
+        metadata = self.context.hubs[next_hub].metadata
+        hubs = self.context.hubs
+        if next_hub == start_hub:
+            return(1)
         if metadata == None:
             return(1)
+        if metadata.max_drones is not None and metadata.max_drones != 0:
+            if (hubs[next_hub].current_nb_drones) >= metadata.max_drones:
+                print(f"!!! WALL ACTIVE ON {next_hub} !!!")
+                return(float('inf'))
         if metadata.zone is None or metadata.zone == 'normal':
             return(1)
         if metadata.zone == 'priority':
@@ -43,10 +51,12 @@ class PathFinder():
             return(2)
         return(1)
 
-    def update_queue(self, hub_neighboor, previous_node):
+    def update_queue(self, hub_neighboor, previous_node, base_node):
         hub_content = self.context.hubs
         for hub in hub_neighboor:
-            cost_current = self.get_cost(hub)
+            cost_current = self.get_cost(hub, base_node)
+            if cost_current == float('inf'):
+                continue
             cost_previous = self.cost_so_far[previous_node]
             challenger_cost = cost_current + cost_previous
             if (hub not in self.cost_so_far) or (challenger_cost < self.cost_so_far[hub]):
@@ -62,21 +72,25 @@ class PathFinder():
         self.came_from[current_hub] = None
         while self.queue:
             cost, popped = heapq.heappop(self.queue)
-            if popped == 'goal':
+            if popped == self.goal:
                 break
-            self.update_queue(self.adj[popped], popped)
+            self.update_queue(self.adj[popped], popped, current_hub)
     
     def build_flight_plan(self, current_hub) -> list[str]:
         zone = self.goal
         flight_plan = []
         while(zone != current_hub):
+            if self.goal not in self.came_from:
+                return [current_hub, current_hub]
             flight_plan.append(zone)
             zone = self.came_from[zone]
         flight_plan.append(current_hub)
         return(flight_plan[::-1])
 
     def run_djikstra(self, current_hub) -> list[str]:
+        self.came_from = {}
+        self.cost_so_far = {}
+        self.queue = []
         self.engine_loop(current_hub)
         self.flight_plan = self.build_flight_plan(current_hub)
-        # print(f"Path found {self.flight_plan}")
         return(self.flight_plan)
