@@ -71,9 +71,9 @@ class MapVisualizer():
             x = self.get_x_real_coords(hub.x)
             y = self.get_y_real_coords(hub.y)
             # image = self.canvas.create_image(x, y, anchor='center', image=self.portal)
-            self._create_circle(x, y, self.circle_size, fill='blue')
-            # self.canvas.create_text(x,y - (self.circle_size+10),fill="black",font="Verdana 50 bold",
-                            # text=hub.name)
+            self._create_circle(x, y, self.circle_size, fill=hub.metadata.color)
+            self.canvas.create_text(x,y - (self.circle_size+10),fill="black",font="Verdana 50 bold",
+                            text=hub.name)
 
     def load_map(self, context):
         self.setup_map_data(context)
