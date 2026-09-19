@@ -9,7 +9,7 @@ class DroneMoves():
         self.root = root
         self.context = context
         self.nb_drone = context.nb_drones
-        self.img = tk.PhotoImage(file="drone.png").subsample(30)
+        self.img = tk.PhotoImage(file="drone.png").subsample(45)
         self.canvas = canvas
         self.load_map = my_visual
         self.drone_and_hub: dict[tuple(float, float): str] = {} 
@@ -25,7 +25,7 @@ class DroneMoves():
     def process(self, simulation):
         '''Need to create a dict of type dict[position: list[Drone_id]]'''
         self.drone_and_hub = {}
-        radius_drone = 15
+        radius_drone = 10
         for drone in simulation:
             id, next_hub = drone.split("-")
             x = self.load_map.get_x_real_coords(self.context.hubs[next_hub].x)
@@ -39,17 +39,17 @@ class DroneMoves():
             total_drone = len(drone_list)
             for index, ids in enumerate(drone_list):
                 teta = index * ((2*3.14)/total_drone)
-                x = center_x + radius_drone * cos(teta)
-                y = center_y + radius_drone * sin(teta)
-                if id not in self.drone_img_ids:
+                x = center_x + (radius_drone * cos(teta))
+                y = center_y - (radius_drone * sin(teta))
+                if ids not in self.drone_img_ids:
                     img_id = self.canvas.create_image(x, y, anchor='center', image=self.img)
-                    self.drone_img_ids({id: img_id})
-                    img_id = droneid_png[id]
+                    self.drone_img_ids.update({ids: img_id})
+                    img_id = self.drone_img_ids[ids]
                 else:
-                    current_x, current_y = self.canvas.coords(img_id)
+                    current_x, current_y = self.canvas.coords(self.drone_img_ids[ids])
                     dx = x - current_x
                     dy = y - current_y
-                    self.canvas.move(img_id, dx, dy)
+                    self.canvas.move(self.drone_img_ids[ids], dx, dy)
 
     def tick_function(self, current_index):
         '''process one move from the moves list'''
@@ -59,7 +59,7 @@ class DroneMoves():
             simulation = self.get_simulation_turn(self.moves[current_index])
             self.tick_counter(current_index)
             self.process(simulation)
-            self.root.after(3000, self.tick_function, current_index + 1)
+            self.root.after(1000, self.tick_function, current_index + 1)
 
     def tick_counter(self, current_index):
         self.label['text'] = f"Tick_counter {current_index}"
