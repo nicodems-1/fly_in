@@ -14,18 +14,29 @@ class DronesFleetHandler():
         self.goal = next(hub for hub in context.hubs.values() if hub.role == "end_hub").name
         self.path_finder = PF(context)
         self.hubs = context.hubs
+        self.context = context
 
     def initalized_drone_array(self) -> None:
         for i in range(self.nb_drones):
             self.drones.append(Drone(drone_id="D"+str(i+1)))
 
-        
+    def update_connection_metadata(self, source, target):
+        connections = self.context.connections
+        for connection in connections:
+            if connection.source == source and connection.target == target:
+                if connection.metadata != None:
+                    connection.metadata.current_link_capacity += 1
+            if connection.source == target and connection.target == source:
+                if connection.metadata.current_link_capacity != None:
+                    connection.metadata.current_link_capacity += 1
+
     def update_djikstra_path(self, drone: Drone):
          return (self.path_finder.run_djikstra(drone.current_hub))
 
     def update_drone_pos(self, drone: Drone):
         if len(drone.flight_plan) > 1:
             if(drone.current_hub != drone.flight_plan[1]):
+                self.update_connection_metadata(drone.current_hub, drone.flight_plan[1])
                 self.hubs[drone.current_hub].current_nb_drones -= 1
                 self.hubs[drone.flight_plan[1]].current_nb_drones += 1
             drone.current_hub = drone.flight_plan[1]

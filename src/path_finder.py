@@ -30,13 +30,26 @@ class PathFinder():
             adjacency_list.update({hub.name: next_hubs})
         return(adjacency_list)
 
+    def get_connection_metadata(self) -> tuple[int, int]:
+        connections = self.context.connections
+        for connection in connections:
+            if connection.source == self.start_hub and connection.target == self.goal:
+                return(connection.metadata.max_link_capacity)
+            if connection.source == self.goal and connection.target == self.start_hub:
+                return(connections.metadata.current_link_capacity, connection.metadata.max_link_capacity)
+            else:
+                return(0, 110)
+
     def get_cost(self, next_hub: str, start_hub:str)-> float|int:
         metadata = self.context.hubs[next_hub].metadata
         hubs = self.context.hubs
+        current_link_capacity, max_link_capacity = self.get_connection_metadata()
         if next_hub == start_hub:
             return(1)
         if metadata == None:
             return(1)
+        if(current_link_capacity >= max_link_capacity):
+            return(float('inf'))
         if metadata.max_drones is not None and metadata.max_drones != 0:
             if (hubs[next_hub].current_nb_drones) >= metadata.max_drones:
                 print(f"!!! WALL ACTIVE ON {next_hub} !!!")

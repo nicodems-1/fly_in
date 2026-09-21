@@ -10,7 +10,8 @@ class HubMetadata(BaseModel):
 
 class ConnectionMetadata(BaseModel):
     # model_config = {"extra": "forbid"}
-    max_link_capacity: Optional[PositiveInt] = None
+    max_link_capacity: Optional[PositiveInt] = 0
+    current_link_capacity: Optional[int] = 0
 
 
 class Hub(BaseModel):
@@ -26,9 +27,7 @@ class Connection(BaseModel):
     '''class that contains the links between the differents hubs'''
     source: str
     target: str
-    metadata: Optional[ConnectionMetadata] = None
-    # max_link_capacity: int
-    # current_link_capacity: int
+    metadata: Optional[ConnectionMetadata]
 
 class Context(BaseModel):
     '''context contain all the infos from class hub and class connection, we'll use context

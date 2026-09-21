@@ -9,7 +9,7 @@ class DroneMoves():
         self.root = root
         self.context = context
         self.nb_drone = context.nb_drones
-        self.img = tk.PhotoImage(file="drone.png").subsample(45)
+        self.img = tk.PhotoImage(file="drone.png").subsample(22)
         self.canvas = canvas
         self.load_map = my_visual
         self.drone_and_hub: dict[tuple(float, float): str] = {} 
