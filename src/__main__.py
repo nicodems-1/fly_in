@@ -4,7 +4,7 @@ from .load_map import MapVisualizer
 from .path_finder import PathFinder
 from .drone_fleet_handler import DronesFleetHandler
 from .drone_visual import DroneMoves
-my_context = parsing("maps/hard/03_ultimate_challenge.txt")
+my_context = parsing("maps/easy/01_linear_path.txt")
 my_visual = MapVisualizer()
 dfh = DronesFleetHandler(my_context)
 canvas, root = my_visual.load_map(my_context)

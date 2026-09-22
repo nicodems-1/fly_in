@@ -3,6 +3,8 @@ from .models import Hub, Connection, Context, HubMetadata, ConnectionMetadata
 def extract_line(raw_line: str) ->tuple[str, str | None]:
     if "[" in raw_line:
         splitted = raw_line.split("[", 1)
+        # check_valid_name(splitted[0])
+        print(splitted)
         return (splitted[0], splitted[1].strip().strip("]"))
     else:
         return(raw_line.strip(), None)
@@ -15,6 +17,13 @@ def parsing_meta(metadata: str)->dict[str, str] | None:
         meta_dict[key] = val
     return(meta_dict)
 
+def check_matching_hub_type(hub_type: str, line: int)-> None:
+    accepted_hubs = ["start_hub", "hub", "end_hub"]
+    for hub in accepted_hubs:
+        if(hub == hub_type):
+            return
+    raise ValueError(f"Line {line}: The type {hub_type} does not exist, please specify a valid type")
+
 
 def parsing(path: str) -> Context:
     '''Parse separately connections and hubs in two differents classes, parse metadata for
@@ -22,25 +31,28 @@ def parsing(path: str) -> Context:
     nb_drones = 0
     hubs: dict[str, Hub] = {}
     connections: list[Connection] = []
+    nb_of_start_hub = 0
+    nb_of_end_hub = 0
+    comments_len = 0
     with open(path) as f:
-        for x in f:
+        for i, x in enumerate(f):
             if x.startswith("#"):
+                comments_len += 1
                 continue
-
-            # print(x.partition(":"))
-
-            
-
-            if x.startswith("nb_drones"):
+            if x.startswith("nb_drones") and i != comments_len:
+                raise ValueError(f" Line {i} The nb Drones should be on the first line")
+            elif x.startswith("nb_drones"):
+                if x.split(":")[0] != "nb_drones":
+                    raise ValueError(f"Line {i}: {x.split(':')[0]} is not a valid key")
                 nb_drones = int(x.split(":")[1].strip())
-
             if(x.startswith(("start_hub", "hub", "end_hub"))):
+                print(f"Testing the hub type verification {x.split(":")[0]}")
+                check_matching_hub_type(x.split(":")[0], i)
                 hub_data, metadata = extract_line(x)
                 my_meta = None
                 if(metadata != None):
                     meta_dict = parsing_meta(metadata)
                     my_meta = HubMetadata(**meta_dict)
-
                 tokens = hub_data.split()
                 role, name, x, y = tokens
                 my_hub = Hub(x=x, y=y, name=name, role=role.strip(":"), metadata=my_meta)

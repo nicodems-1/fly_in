@@ -1,0 +1,3 @@
+Parsing metadata and raising error with the line whenerver input is wrong
+
+first line must be the nb_drones, the nb_drones must be > 0
