@@ -5,6 +5,7 @@
 # adjacency_list should be rebuilt every turn because of the different zones condition and capacity
 import heapq
 from .models import Context, Hub
+from time import sleep 
 
 class PathFinder():
     def __init__(self, context: Context):
@@ -30,20 +31,30 @@ class PathFinder():
             adjacency_list.update({hub.name: next_hubs})
         return(adjacency_list)
 
-    def get_connection_metadata(self) -> tuple[int, int]:
+    def get_connection_metadata(self, next_hub, start_hub) -> tuple[int, int]:
         connections = self.context.connections
         for connection in connections:
-            if connection.source == self.start_hub and connection.target == self.goal:
-                return(connection.metadata.max_link_capacity)
-            if connection.source == self.goal and connection.target == self.start_hub:
-                return(connections.metadata.current_link_capacity, connection.metadata.max_link_capacity)
-            else:
-                return(0, 110)
+            if connection.source == start_hub and connection.target == next_hub and connection.metadata != None:
+                print("found connection 1")
+                # sleep(1)
+                # Fixed: Returning both current and max to match the tuple[int, int] signature
+                return (connection.metadata.current_link_capacity, connection.metadata.max_link_capacity)
+
+            if connection.source == next_hub and connection.target == start_hub and connection.metadata != None:
+                print("found connection 2")
+                # sleep(1)
+                # Fixed: Changed 'connections.metadata' (the list) to 'connection.metadata' (the item)
+                return (connection.metadata.current_link_capacity, connection.metadata.max_link_capacity)
+
+        # Fixed: Moved outside the for-loop so it only triggers if the entire list is checked
+        print(f"No connections capacity found source == {start_hub}, target == {next_hub}")
+        return (0, 110)
 
     def get_cost(self, next_hub: str, start_hub:str)-> float|int:
         metadata = self.context.hubs[next_hub].metadata
         hubs = self.context.hubs
-        current_link_capacity, max_link_capacity = self.get_connection_metadata()
+        current_link_capacity, max_link_capacity = self.get_connection_metadata(next_hub, start_hub)
+        print(current_link_capacity, max_link_capacity)
         if next_hub == start_hub:
             return(1)
         if metadata == None:

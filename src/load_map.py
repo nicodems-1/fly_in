@@ -19,7 +19,7 @@ class MapVisualizer():
         self.offset_x = 0
         self.offset_y = 0
         self.circle_size = 0
-        self.portal = self.img = tk.PhotoImage(file="portal.png").subsample(8)
+        # self.portal = self.img = tk.PhotoImage(file="portal.png").subsample(18)
 
     def spawn_png(self):
         image = self.canvas.create_image(100, 100, anchor=tk.NW, image=self.img)
@@ -72,8 +72,8 @@ class MapVisualizer():
         for hub in hubs.values():
             x = self.get_x_real_coords(hub.x)
             y = self.get_y_real_coords(hub.y)
-            image = self.canvas.create_image(x, y, anchor='center', image=self.portal)
-            # self._create_circle(x, y, self.circle_size, fill=hub.metadata.color)
+            # image = self.canvas.create_image(x, y, anchor='center', image=self.portal)
+            self._create_circle(x, y, self.circle_size, fill="white")
             self.canvas.create_text(x,y - (self.circle_size+10),fill="black",font="Verdana 10 bold",
                             text=hub.name)
 

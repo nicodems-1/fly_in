@@ -9,13 +9,14 @@ class DroneMoves():
         self.root = root
         self.context = context
         self.nb_drone = context.nb_drones
-        self.img = tk.PhotoImage(file="drone.png").subsample(22)
+        self.img = tk.PhotoImage(file="drone.png").subsample(35)
         self.canvas = canvas
         self.load_map = my_visual
         self.drone_and_hub: dict[tuple(float, float): str] = {} 
         self.label = tk.Label(root, font=('Helvetica 40 bold'), background='green', foreground='white')
         self.label.place(x=50, y=50)
         self.drone_img_ids = {}
+
     def get_simulation_turn(self, move):
         return(move.split())
 
@@ -25,7 +26,7 @@ class DroneMoves():
     def process(self, simulation):
         '''Need to create a dict of type dict[position: list[Drone_id]]'''
         self.drone_and_hub = {}
-        radius_drone = 10
+        radius_drone = 50
         for drone in simulation:
             id, next_hub = drone.split("-")
             x = self.load_map.get_x_real_coords(self.context.hubs[next_hub].x)
@@ -59,7 +60,7 @@ class DroneMoves():
             simulation = self.get_simulation_turn(self.moves[current_index])
             self.tick_counter(current_index)
             self.process(simulation)
-            self.root.after(1000, self.tick_function, current_index + 1)
+            self.root.after(200, self.tick_function, current_index + 1)
 
     def tick_counter(self, current_index):
         self.label['text'] = f"Tick_counter {current_index}"
