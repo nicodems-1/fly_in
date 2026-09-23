@@ -10,7 +10,7 @@ class HubMetadata(BaseModel):
 
 class ConnectionMetadata(BaseModel):
     # model_config = {"extra": "forbid"}
-    max_link_capacity: Optional[PositiveInt] = 0
+    max_link_capacity: Optional[PositiveInt] = 1
     current_link_capacity: Optional[int] = 0
 
 
@@ -34,5 +34,4 @@ class Context(BaseModel):
     for the calculations and the display'''
     nb_drones: PositiveInt
     hubs: dict[str, Hub]
-    connections: list[Connection]
-    
+    connections: list[Connection]    

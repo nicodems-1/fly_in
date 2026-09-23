@@ -1,5 +1,7 @@
 import tkinter as tk
 from .models import Context, Hub
+import random
+from .colors_available import colors
 
 class MapVisualizer():
     def __init__(self):
@@ -18,7 +20,8 @@ class MapVisualizer():
         self.scale = 0
         self.offset_x = 0
         self.offset_y = 0
-        self.circle_size = 0
+        self.circle_radius_size = 0
+        self.available_colors: list[str] = colors()
         # self.portal = self.img = tk.PhotoImage(file="portal.png").subsample(18)
 
     def spawn_png(self):
@@ -49,8 +52,7 @@ class MapVisualizer():
         scale_y = (self.screen_height - (2 * safe_margin)) / scale_dy
         self.scale = min(scale_x, scale_y)
         ideal_size = self.scale/4
-        self.circle_size = max(5, min(ideal_size, 40))
-
+        self.circle_radius_size = max(5, min(ideal_size, 40))
         self.offset_x = ((self.screen_width - (true_dx*self.scale)))/2
         self.offset_y = ((self.screen_height) - (true_dy*self.scale))/2
 
@@ -72,9 +74,12 @@ class MapVisualizer():
         for hub in hubs.values():
             x = self.get_x_real_coords(hub.x)
             y = self.get_y_real_coords(hub.y)
-            # image = self.canvas.create_image(x, y, anchor='center', image=self.portal)
-            self._create_circle(x, y, self.circle_size, fill="white")
-            self.canvas.create_text(x,y - (self.circle_size+10),fill="black",font="Verdana 10 bold",
+            if(hub.metadata.color is not None and hub.metadata.color in self.available_colors):
+                color = hub.metadata.color
+            else:
+                color = random.choice(self.available_colors)
+            self._create_circle(x, y, self.circle_radius_size, fill=color)
+            self.canvas.create_text(x,y - (self.circle_radius_size+10),fill="black",font="Verdana 10 bold",
                             text=hub.name)
 
     def load_map(self, context):
@@ -83,4 +88,4 @@ class MapVisualizer():
         # self.spawn_png()
         self.create_hubs(context)
         self.root.title("FLY IN")
-        return(self.canvas, self.root)
+        return(self.canvas, self.root, self.circle_radius_size)

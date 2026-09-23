@@ -4,7 +4,7 @@ def extract_line(raw_line: str) ->tuple[str, str | None]:
     if "[" in raw_line:
         splitted = raw_line.split("[", 1)
         # check_valid_name(splitted[0])
-        print(splitted)
+        # print(splitted)
         return (splitted[0], splitted[1].strip().strip("]"))
     else:
         return(raw_line.strip(), None)
@@ -36,7 +36,7 @@ def parsing(path: str) -> Context:
     comments_len = 0
     with open(path) as f:
         for i, x in enumerate(f):
-            if x.startswith("#"):
+            if x.startswith("#") or x == "\n":
                 comments_len += 1
                 continue
             if x.startswith("nb_drones") and i != comments_len:
@@ -46,7 +46,6 @@ def parsing(path: str) -> Context:
                     raise ValueError(f"Line {i}: {x.split(':')[0]} is not a valid key")
                 nb_drones = int(x.split(":")[1].strip())
             if(x.startswith(("start_hub", "hub", "end_hub"))):
-                print(f"Testing the hub type verification {x.split(":")[0]}")
                 check_matching_hub_type(x.split(":")[0], i)
                 hub_data, metadata = extract_line(x)
                 my_meta = None

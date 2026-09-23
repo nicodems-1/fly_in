@@ -1,15 +1,16 @@
 import tkinter as tk
 from .models import Context
 from tkinter import font
-from math import cos, sin
+from math import cos, sin, sqrt, ceil
 
 class DroneMoves():
-    def __init__(self, moves: list[str], context: Context, canvas, root, my_visual):
+    def __init__(self, moves: list[str], context: Context, canvas, root, my_visual, circle_size):
+        self.circle_size = circle_size
         self.moves: list[str] = moves
         self.root = root
         self.context = context
         self.nb_drone = context.nb_drones
-        self.img = tk.PhotoImage(file="drone.png").subsample(35)
+        self.img = tk.PhotoImage(file="drone.png").subsample(self.resize_drone_img())
         self.canvas = canvas
         self.load_map = my_visual
         self.drone_and_hub: dict[tuple(float, float): str] = {} 
@@ -20,19 +21,24 @@ class DroneMoves():
     def get_simulation_turn(self, move):
         return(move.split())
 
-    def init_drones(self):
-        pass
+    def resize_drone_img(self)->int:
+        width = 2048
+        height = 1148
+        radius = self.circle_size
+        diagonal = sqrt(width**2 + height**2)
+        n = ceil(diagonal/(2*radius))
+        return n
 
     def process(self, simulation):
         '''Need to create a dict of type dict[position: list[Drone_id]]'''
         self.drone_and_hub = {}
-        radius_drone = 50
+        radius_drone = self.circle_size - 5
         for drone in simulation:
-            id, next_hub = drone.split("-")
+            id, next_hub, flag = drone.split("-")
             x = self.load_map.get_x_real_coords(self.context.hubs[next_hub].x)
             y = self.load_map.get_y_real_coords(self.context.hubs[next_hub].y)
             if ((x, y) not in self.drone_and_hub):
-                self.drone_and_hub.update({(x, y):[id]})
+                self.drone_and_hub.update({(x, y):[id, flag]})
             else:
                 self.drone_and_hub[(x, y)].append(id)
         for coords, drone_list in self.drone_and_hub.items():
@@ -50,6 +56,9 @@ class DroneMoves():
                     current_x, current_y = self.canvas.coords(self.drone_img_ids[ids])
                     dx = x - current_x
                     dy = y - current_y
+                    # if flag == "mid":
+                    #     dx = dx/2
+                    #     dy = dy/2
                     self.canvas.move(self.drone_img_ids[ids], dx, dy)
 
     def tick_function(self, current_index):
@@ -60,7 +69,7 @@ class DroneMoves():
             simulation = self.get_simulation_turn(self.moves[current_index])
             self.tick_counter(current_index)
             self.process(simulation)
-            self.root.after(200, self.tick_function, current_index + 1)
+            self.root.after(1000, self.tick_function, current_index + 1)
 
     def tick_counter(self, current_index):
         self.label['text'] = f"Tick_counter {current_index}"

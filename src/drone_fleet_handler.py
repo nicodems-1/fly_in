@@ -3,10 +3,11 @@ from .parser import Context
 
 class Drone():
     def __init__(self, drone_id):
-        self.drone_id = drone_id
+        self.drone_id: str = drone_id
         self.flight_plan: list[str] = []
-        self.current_hub = 'start'
-        self.previous_hub = "start"
+        self.current_hub: str = 'start'
+        self.previous_hub: str = "start"
+        self.is_restricted: bool = False
 
 class DronesFleetHandler():
     def __init__(self, context: Context) -> None:
@@ -60,10 +61,29 @@ class DronesFleetHandler():
                 self.hubs[drone.flight_plan[0]].current_nb_drones += 1
             drone.previous_hub = drone.current_hub
             drone.current_hub = drone.flight_plan[0]
-        self.decrement_connection_metadata(drone.current_hub, drone.previous_hub)
+        if drone.is_restricted is False:
+            self.decrement_connection_metadata(drone.current_hub, drone.previous_hub)
 
     def get_logs(self, drone: Drone):
-        return(f"{drone.drone_id}-{drone.current_hub} ")
+        if drone.is_restricted is True:
+            return(f"{drone.drone_id}-{drone.current_hub}-mid ")
+        return(f"{drone.drone_id}-{drone.current_hub}-normal ")
+
+    def update_zone_status(self, drone: Drone) -> None:
+        hubs = self.context.hubs
+        if drone.is_restricted == True:
+            self.decrement_connection_metadata(drone.previous_hub, drone.current_hub)
+            drone.is_restricted = False
+            return
+        if(len(drone.flight_plan)>1):
+            if hubs[drone.flight_plan[1]].metadata is not None:
+                if hubs[drone.flight_plan[1]].metadata.zone is not None: 
+                    if hubs[drone.flight_plan[1]].metadata.zone == "restricted":
+                        drone.is_restricted = True
+        elif(len(drone.flight_plan) == 1):
+                if hubs[drone.flight_plan[0]].metadata.zone is not None: 
+                    if hubs[drone.flight_plan[0]].metadata.zone == "restricted":
+                        drone.is_restricted = True
 
     def handle_drones(self, nb_drones: int):
         self.nb_drones = nb_drones
@@ -74,11 +94,12 @@ class DronesFleetHandler():
             tick_log = ""
             count = 1
             for drone in self.drones:
+                self.update_zone_status(drone)
                 if drone.current_hub == self.goal:
                     count += 1
-                drone.flight_plan = self.update_djikstra_path(drone)
+                if drone.is_restricted is False:
+                    drone.flight_plan = self.update_djikstra_path(drone)
                 tick_log += self.get_logs(drone)
                 self.update_drone_pos(drone)
             logs_list.append(tick_log)
-        print(logs_list)
         return(logs_list)

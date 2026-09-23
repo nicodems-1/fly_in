@@ -2,10 +2,10 @@
 nb_drones: 2
 
 start_hub: start 0 0 [color=green]
-hub: waypoint1 1 0 [color=blue, max_drones=4]
-hub: waypoint2 2 0 [color=blue, max_drones=1]
+hub: waypoint1 1 0 [color=1 max_drones=1 zone=restricted]
+hub: waypoint2 2 0 [color=blue max_drones=1]
 end_hub: goal 3 0 [color=red]
 
 connection: start-waypoint1
-connection: waypoint1-waypoint2 
+connection: waypoint1-waypoint2
 connection: waypoint2-goal
