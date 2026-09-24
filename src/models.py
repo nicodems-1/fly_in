@@ -1,37 +1,40 @@
-from pydantic import BaseModel, Field, PositiveInt
-from typing import Optional, Literal
+from dataclasses import dataclass, field
+from typing import Literal, Dict, List
 
-class HubMetadata(BaseModel):
-    # model_config = {"extra": "forbid"}
-    color: Optional[str] = None
-    max_drones: Optional[PositiveInt] = 0
-    zone: Optional[Literal["normal", "restricted", "priority", "blocked"]] = None
+@dataclass
+class HubMetadata:
+    color: str = "none"
+    max_drones: int = 1 
+    zone: Literal["normal", "restricted", "priority", "blocked"] = "normal"
 
+@dataclass
+class ConnectionMetadata:
+    max_link_capacity: int = 1
 
-class ConnectionMetadata(BaseModel):
-    # model_config = {"extra": "forbid"}
-    max_link_capacity: Optional[PositiveInt] = 1
-    current_link_capacity: Optional[int] = 0
-
-
-class Hub(BaseModel):
+@dataclass
+class Hub:
     '''class hub which contains info for each hub such as color position, name and role'''
     x: int
     y: int
     name: str
     role: Literal["start_hub", "end_hub", "hub"]
-    metadata: Optional[HubMetadata] = None
-    current_nb_drones: Optional[int] = 0
+    # Toujours instancié : plus besoin de vérifier si c'est None !
+    metadata: HubMetadata = field(default_factory=HubMetadata)
+    current_nb_drones: int = 0
 
-class Connection(BaseModel):
+@dataclass
+class Connection:
     '''class that contains the links between the differents hubs'''
     source: str
     target: str
-    metadata: Optional[ConnectionMetadata]
+    # Correction de l'erreur "metadata = 1" et application du default_factory
+    metadata: ConnectionMetadata = field(default_factory=ConnectionMetadata)
+    current_drones: int = 0
 
-class Context(BaseModel):
+@dataclass
+class Context:
     '''context contain all the infos from class hub and class connection, we'll use context
     for the calculations and the display'''
-    nb_drones: PositiveInt
-    hubs: dict[str, Hub]
-    connections: list[Connection]    
+    hubs: Dict[str, Hub]
+    connections: List[Connection]
+    nb_drones: int = 0

@@ -4,6 +4,8 @@ from .load_map import MapVisualizer
 from .path_finder import PathFinder
 from .drone_fleet_handler import DronesFleetHandler
 from .drone_visual import DroneMoves
+
+print("Program initialization debug")
 my_context = parsing("maps/easy/01_linear_path.txt")
 my_visual = MapVisualizer()
 dfh = DronesFleetHandler(my_context)

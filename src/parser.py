@@ -14,7 +14,10 @@ def parsing_meta(metadata: str)->dict[str, str] | None:
     splitted_meta = metadata.split()
     for item in splitted_meta:
         key, val = item.split("=")
-        meta_dict[key] = val
+        if key in ["max_drones", "max_link_capacity"]:
+            meta_dict[key] = int(val)
+        else:
+            meta_dict[key] = val
     return(meta_dict)
 
 def check_matching_hub_type(hub_type: str, line: int)-> None:
@@ -54,7 +57,7 @@ def parsing(path: str) -> Context:
                     my_meta = HubMetadata(**meta_dict)
                 tokens = hub_data.split()
                 role, name, x, y = tokens
-                my_hub = Hub(x=x, y=y, name=name, role=role.strip(":"), metadata=my_meta)
+                my_hub = Hub(x=int(x), y=int(y), name=name, role=role.strip(":"), metadata=my_meta)
                 hubs.update({name: my_hub})
 
             if(x.startswith("connection")):

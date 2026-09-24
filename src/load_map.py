@@ -32,7 +32,6 @@ class MapVisualizer():
 
     def setup_map_data(self, context: Context):
         hubs = context.hubs
-        
         safe_margin = 100
         self.x_max = max(hub.x for hub in hubs.values())
         self.x_min = min(hub.x for hub in hubs.values())
