@@ -27,9 +27,8 @@ class Connection:
     '''class that contains the links between the differents hubs'''
     source: str
     target: str
-    # Correction de l'erreur "metadata = 1" et application du default_factory
     metadata: ConnectionMetadata = field(default_factory=ConnectionMetadata)
-    current_drones: int = 0
+    current_link_capacity: int = 0
 
 @dataclass
 class Context:

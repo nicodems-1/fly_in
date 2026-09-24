@@ -6,7 +6,7 @@ from .drone_fleet_handler import DronesFleetHandler
 from .drone_visual import DroneMoves
 
 print("Program initialization debug")
-my_context = parsing("maps/easy/01_linear_path.txt")
+my_context = parsing("maps/medium/01_dead_end_trap.txt")
 my_visual = MapVisualizer()
 dfh = DronesFleetHandler(my_context)
 canvas, root, circle_radius_size = my_visual.load_map(my_context)

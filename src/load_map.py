@@ -6,7 +6,7 @@ from .colors_available import colors
 class MapVisualizer():
     def __init__(self):
         self.root = tk.Tk()
-        self.screen_width= self.root.winfo_screenwidth()
+        self.screen_width= self.root.winfo_screenwidth()*0.5
         self.screen_height = self.root.winfo_screenheight()
         # self.screen_width= 1200
         # self.screen_height = 900

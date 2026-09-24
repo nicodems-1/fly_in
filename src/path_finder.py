@@ -38,13 +38,13 @@ class PathFinder():
                 # print("found connection 1")
                 # sleep(1)
                 # Fixed: Returning both current and max to match the tuple[int, int] signature
-                return (connection.metadata.current_link_capacity, connection.metadata.max_link_capacity)
+                return (connection.current_link_capacity, connection.metadata.max_link_capacity)
 
             if connection.source == next_hub and connection.target == start_hub and connection.metadata != None:
                 # print("found connection 2")
                 # sleep(1)
                 # Fixed: Changed 'connections.metadata' (the list) to 'connection.metadata' (the item)
-                return (connection.metadata.current_link_capacity, connection.metadata.max_link_capacity)
+                return (connection.current_link_capacity, connection.metadata.max_link_capacity)
 
         # Fixed: Moved outside the for-loop so it only triggers if the entire list is checked
         # print(f"No connections capacity found source == {start_hub}, target == {next_hub}")

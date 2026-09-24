@@ -137,17 +137,24 @@ class DronesFleetHandler:
         while len(finished_drones) < nb_drones and turn < max_turns:
             turn_logs = []
             
-            for drone in self.drones:
-                if drone.drone_id in finished_drones:
-                    continue
-                    
-                log = self.process_drone(drone)
+            has_moved_this_turn = set()
+            moved_in_pass = True
+            while moved_in_pass:
+                moved_in_pass = False
                 
-                if log:
-                    turn_logs.append(log)
-                    
-                if drone.current_hub == self.goal and drone.turns_remaining == 0:
-                    finished_drones.add(drone.drone_id)
+                for drone in self.drones:
+                    if drone.drone_id in finished_drones or drone.drone_id in has_moved_this_turn:
+                        continue
+
+                    log = self.process_drone(drone)
+
+                    if log:
+                        turn_logs.append(log)
+                        has_moved_this_turn.add(drone.drone_id)
+                        moved_in_pass = True
+
+                    if drone.current_hub == self.goal and drone.turns_remaining == 0:
+                        finished_drones.add(drone.drone_id)
 
             if turn_logs:
                 logs_list.append(" ".join(turn_logs))
