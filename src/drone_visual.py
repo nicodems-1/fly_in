@@ -69,8 +69,12 @@ class DroneMoves():
             total_drone = len(drone_list)
             for index, ids in enumerate(drone_list):
                 teta = index * ((2*3.14)/total_drone)
-                x = center_x + (radius_drone * cos(teta))
-                y = center_y - (radius_drone * sin(teta))
+                if total_drone == 1:
+                    x = center_x
+                    y = center_y
+                else:
+                    x = center_x + (radius_drone * cos(teta))
+                    y = center_y - (radius_drone * sin(teta))
                 if ids not in self.drone_img_ids:
                     img_id = self.canvas.create_image(x, y, anchor='center', image=self.img)
                     self.drone_img_ids.update({ids: img_id})
