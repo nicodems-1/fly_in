@@ -84,14 +84,12 @@ class DronesFleetHandler:
         if not drone.flight_plan:
             return None
             
-        # Cherche la première étape du plan qui n'est pas la position actuelle
         next_hub_name = None
         for step in drone.flight_plan:
             if step != drone.current_hub:
                 next_hub_name = step
                 break
                 
-        # S'il n'y a pas de prochaine étape, le drone est arrivé ou bloqué
         if not next_hub_name:
             return None
             
@@ -102,7 +100,20 @@ class DronesFleetHandler:
             return None
 
         if not self.has_hub_capacity(next_hub_name) or not self.has_connection_capacity(conn):
-            return None
+            alt_plan = self.path_finder.run_djikstra(drone.current_hub, ignored_nodes=[next_hub_name])
+
+            if alt_plan and len(alt_plan) > 1:
+                alt_next_hub = alt_plan[1]
+                alt_conn = self.get_connection(drone.current_hub, alt_next_hub)
+
+                if alt_conn and self.has_hub_capacity(alt_next_hub) and self.has_connection_capacity(alt_conn):
+                    drone.flight_plan = alt_plan
+                    next_hub_name = alt_next_hub
+                    conn = alt_conn
+                else:
+                    return None
+            else:
+                return None
 
         self.reserve_hub(drone.current_hub, -1)
         
@@ -123,6 +134,7 @@ class DronesFleetHandler:
             drone.current_hub = next_hub_name
             
             return f"{drone.drone_id}-{drone.current_hub}"
+
 
     def handle_drones(self, nb_drones: int) -> List[str]:
         self.nb_drones = nb_drones

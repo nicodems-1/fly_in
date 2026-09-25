@@ -35,19 +35,10 @@ class PathFinder():
         connections = self.context.connections
         for connection in connections:
             if connection.source == start_hub and connection.target == next_hub and connection.metadata != None:
-                # print("found connection 1")
-                # sleep(1)
-                # Fixed: Returning both current and max to match the tuple[int, int] signature
                 return (connection.current_link_capacity, connection.metadata.max_link_capacity)
 
             if connection.source == next_hub and connection.target == start_hub and connection.metadata != None:
-                # print("found connection 2")
-                # sleep(1)
-                # Fixed: Changed 'connections.metadata' (the list) to 'connection.metadata' (the item)
                 return (connection.current_link_capacity, connection.metadata.max_link_capacity)
-
-        # Fixed: Moved outside the for-loop so it only triggers if the entire list is checked
-        # print(f"No connections capacity found source == {start_hub}, target == {next_hub}")
         return (0, 110)
 
     def get_cost(self, next_hub: str, start_hub:str)-> float|int:
@@ -75,7 +66,7 @@ class PathFinder():
                 heapq.heappush(self.queue, (challenger_cost, hub))
 
 
-    def engine_loop(self, current_hub):
+    def engine_loop(self, current_hub, ignored_nodes):
         self.cost_so_far.update({current_hub: 0})
         heapq.heappush(self.queue, (0, current_hub))
         heapq.heapify(self.queue)
@@ -84,6 +75,8 @@ class PathFinder():
             cost, popped = heapq.heappop(self.queue)
             if popped == self.goal:
                 break
+            if popped in ignored_nodes:
+                continue
             self.update_queue(self.adj[popped], popped, current_hub)
     
     def build_flight_plan(self, current_hub) -> list[str]:
@@ -97,10 +90,12 @@ class PathFinder():
         flight_plan.append(current_hub)
         return(flight_plan[::-1])
 
-    def run_djikstra(self, current_hub) -> list[str]:
+    def run_djikstra(self, current_hub: str, ignored_nodes: list[str] = None) -> list[str]:
+        if ignored_nodes is None:
+            ignored_nodes = []
         self.came_from = {}
         self.cost_so_far = {}
         self.queue = []
-        self.engine_loop(current_hub)
+        self.engine_loop(current_hub, ignored_nodes)
         self.flight_plan = self.build_flight_plan(current_hub)
         return(self.flight_plan)

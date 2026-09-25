@@ -48,7 +48,6 @@ class DroneMoves():
                 conn_obj = next((c for c in self.context.connections if f"{c.source}-{c.target}" == target_name or f"{c.target}-{c.source}" == target_name), None)
 
                 if conn_obj:
-                    print("restricted found")
                     x1 = self.load_map.get_x_real_coords(self.context.hubs[conn_obj.source].x)
                     y1 = self.load_map.get_y_real_coords(self.context.hubs[conn_obj.source].y)
                     x2 = self.load_map.get_x_real_coords(self.context.hubs[conn_obj.target].x)

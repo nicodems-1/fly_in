@@ -3,8 +3,6 @@ from .models import Hub, Connection, Context, HubMetadata, ConnectionMetadata
 def extract_line(raw_line: str) ->tuple[str, str | None]:
     if "[" in raw_line:
         splitted = raw_line.split("[", 1)
-        # check_valid_name(splitted[0])
-        # print(splitted)
         return (splitted[0], splitted[1].strip().strip("]"))
     else:
         return(raw_line.strip(), None)
