@@ -53,25 +53,12 @@ class PathFinder():
     def get_cost(self, next_hub: str, start_hub:str)-> float|int:
         metadata = self.context.hubs[next_hub].metadata
         hubs = self.context.hubs
-        current_link_capacity, max_link_capacity = self.get_connection_metadata(next_hub, start_hub)
-        # print(current_link_capacity, max_link_capacity)
         if next_hub == start_hub:
             return(1)
         if metadata == None:
             return(1)
-        if(current_link_capacity >= max_link_capacity):
-            return(float('inf'))
-        if metadata.max_drones is not None and metadata.max_drones != 0:
-            if (hubs[next_hub].current_nb_drones) >= metadata.max_drones:
-                return(float('inf'))
-        if metadata.zone is None or metadata.zone == 'normal':
-            return(1)
-        if metadata.zone == 'priority':
-            return(1)
         if metadata.zone == 'blocked':
             return(float('inf'))
-        if metadata.zone == 'restricted':
-            return(2)
         return(1)
 
     def update_queue(self, hub_neighboor, previous_node, base_node):
