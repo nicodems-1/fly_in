@@ -40,18 +40,18 @@ class MapParser:
                 meta_dict[key] = val
         return meta_dict
 
-    def _parsing_meta_connection(self, metadata: str) -> None:
-        clean_meta = metadata.strip("]")
-        if "=" not in clean_meta:
+    def _parsing_meta_connection(self, metadata: str) -> ConnectionMetadata:
+        if "=" not in metadata:
             raise ValueError(f"Line {self.current_line}\n"
                              f"Metadata connection should be formated with "
                              f"an equal sign in the middle "
-                             f"current: <<{clean_meta}>>")
-        splitted = clean_meta.split("=")
+                             f"current: <<{metadata}>>")
+        splitted = metadata.split("=")
         if splitted[1].isdigit() is False:
             raise ValueError(f"Line {self.current_line}\n"
                              f"Max_link_capacity must be a positive integer\n"
                              f"Current: <<{splitted[1]}>>")
+        return ConnectionMetadata(max_link_capacity=int(splitted[1]))
 
     def _parse_nb_drone(self, line) -> None:
         nb_drones = int(line.split()[1])
@@ -142,13 +142,19 @@ class MapParser:
             if connection.source == new_co.source:
                 if connection.target == new_co.target:
                     raise ValueError(f"Line {self.current_line} "
-                                     f"Duplicate connection"
+                                     f"Duplicate connection "
                                      f"\n <<{splitted[1]}>>")
-        if len(splitted) > 2:
-            self._parsing_meta_connection(line.split("[")[1])
-
+            if "[" in line:
+                match = re.search(r'\[([^\[\]]+)\]\s*$', line)
+                if not match:
+                    raise ValueError(f"Line {self.current_line} : "
+                                 f"Invalid metaformat, brackets are "
+                                 f"not placed correctly")
+                else:
+                    connection_meta = match.group(1)
+                    meta_parsed = self._parsing_meta_connection(connection_meta)
+                    new_co.metadata = meta_parsed
         self.connections.append(new_co)
-        print(splitted[1])
 
     def parse(self) -> Context:
         with open(self.filepath) as f:
