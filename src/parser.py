@@ -17,13 +17,8 @@ class MapParser:
     def _parsing_meta_hub(self, metadata: str) -> dict[str, int] | None:
         meta_dict = {}
         zone_type = ["normal", "restricted", "blocked", "priority"]
-        if not (metadata.endswith("]")):
-            raise ValueError(f"Line {self.current_line}\n"
-                             f"Metadata must be between brackets\n"
-                             f"Current: {metadata}")
-        splitted_meta = metadata.strip("[").strip("]").split()
         allowed_types = ["zone", "color", "max_drones"]
-        for item in splitted_meta:
+        for item in metadata.split():
             key, val = item.split("=")
             if key in ["max_drones", "max_link_capacity"]:
                 meta_dict[key] = int(val)
@@ -69,7 +64,6 @@ class MapParser:
         self.nb_drones = nb_drones
 
     def _parse_hub(self, line: str):
-        print("Entering the parsing of the hub")
         hub_type = ["start_hub", "end_hub", "hub"]
         splitted = line.split()
         if splitted[0].strip(":") == splitted[0]:
@@ -106,7 +100,13 @@ class MapParser:
         else:
             role = "end_hub"
         if "[" in line:
-            meta = self._parsing_meta_hub(metadata=line.split("[")[1])
+            match = re.search(r'\[([^\[\]]+)\]\s*$', line)
+        if not match:
+            raise ValueError(f"Line {self.current_line} : "
+                             f"Invalid metaformat, brackets are "
+                             f"not placed correctly")
+        meta_content = match.group(1)
+        meta = self._parsing_meta_hub(meta_content)
         meta_hub = HubMetadata(color=meta.get("color"), max_drones=meta.get("max_drones", 1), zone=meta.get('zone', 'normal'))
         new_hub = Hub(x=int(x_coord), y=int(y_coord), name=hub_name, role=role, metadata=meta_hub)
         self.zone_names.append(hub_name)
