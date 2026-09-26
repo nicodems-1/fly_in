@@ -6,7 +6,6 @@ class MapParser:
     def __init__(self, filepath: str):
         self.filepath = filepath
         self.current_line: int = 0
-        self.hub: dict[str, Hub] = {}
         self.connections: list[Connection] = []
         self.start = False
         self.goal = False
@@ -36,6 +35,12 @@ class MapParser:
                 raise ValueError(f"Line {self.current_line}\n"
                                  f"zone type: {val} does not exist \n"
                                  f"Allowed zones types: {zone_type}")
+            if key == "max_drones":
+                if not val.isdigit():
+                    raise ValueError(f"Line {self.current_line}\n"
+                                     f"max_drones must be a positive integer\n"
+                                     f"current: <<{val}>>")
+                meta_dict[key] = int(val)
             else:
                 meta_dict[key] = val
         return meta_dict
@@ -85,7 +90,6 @@ class MapParser:
             raise ValueError(f"Line {self.current_line} "
                              f"Dashes are not allowed in Zone Names")
         x_coord = splitted[2]
-        print(x_coord)
         if not x_coord.strip('-').isdigit():
             raise ValueError(f"Line {self.current_line} "
                              f"x_coord = {splitted[2]} is not an integer"
@@ -95,10 +99,18 @@ class MapParser:
             raise ValueError(f"Line {self.current_line} "
                              f"y_coord = {splitted[3]} is not an integer"
                              f"\nOnly integer are allowed")
-
-        if len(splitted) > 3:
-            self._parsing_meta_hub(metadata=line.split("[")[1])
+        if line.startswith("hub"):
+            role = "hub"
+        elif line.startswith("start_hub"):
+            role = "start_hub"
+        else:
+            role = "end_hub"
+        if "[" in line:
+            meta = self._parsing_meta_hub(metadata=line.split("[")[1])
+        meta_hub = HubMetadata(color=meta.get("color"), max_drones=meta.get("max_drones", 1), zone=meta.get('zone', 'normal'))
+        new_hub = Hub(x=int(x_coord), y=int(y_coord), name=hub_name, role=role, metadata=meta_hub)
         self.zone_names.append(hub_name)
+        self.hubs.update({hub_name: new_hub})
 
     def _parse_connection(self, line: str):
         splitted = line.split()
@@ -168,5 +180,8 @@ class MapParser:
                     raise ValueError(f"Line {self.current_line} "
                                      f"does not comply with authorized format "
                                      f"\n <<{line}>> ")
+            if not self.start or not self.goal:
+                raise ValueError(f"Line {self.current_line}Missing start_hub"
+                                 f" or end_hub in the map")
 
         return Context(nb_drones=self.nb_drones, hubs=self.hubs, connections=self.connections)

@@ -3,13 +3,20 @@ from .models import Context, Hub
 import random
 from .colors_available import colors
 
-class MapVisualizer():
+
+class MapVisualizer:
     def __init__(self):
         self.root = tk.Tk()
-        self.screen_width= self.root.winfo_screenwidth()
+        self.screen_width = self.root.winfo_screenwidth()
         self.screen_height = self.root.winfo_screenheight()
-        self.canvas = tk.Canvas(self.root, width=self.screen_width, height=self.screen_height, borderwidth=0, highlightthickness=0,
-                       bg="white")
+        self.canvas = tk.Canvas(
+            self.root,
+            width=self.screen_width,
+            height=self.screen_height,
+            borderwidth=0,
+            highlightthickness=0,
+            bg="white",
+        )
         self.x_min = 0
         self.x_max = 0
         self.y_min = 0
@@ -25,7 +32,7 @@ class MapVisualizer():
         image = self.canvas.create_image(100, 100, anchor=tk.NW, image=self.img)
 
     def _create_circle(self, x, y, r, **kwargs):
-        return self.canvas.create_oval(x-r, y-r, x+r, y+r, **kwargs)
+        return self.canvas.create_oval(x - r, y - r, x + r, y + r, **kwargs)
 
     def setup_map_data(self, context: Context):
         hubs = context.hubs
@@ -36,27 +43,27 @@ class MapVisualizer():
         self.y_max = max(hub.y for hub in hubs.values())
         self.y_min = min(hub.y for hub in hubs.values())
 
-        true_dx = (self.x_max - self.x_min)
-        true_dy = (self.y_max - self.y_min)
+        true_dx = self.x_max - self.x_min
+        true_dy = self.y_max - self.y_min
         scale_dx = true_dx
         scale_dy = true_dy
-        if(true_dx == 0):
+        if true_dx == 0:
             scale_dx = 1
-        if(true_dy == 0):
+        if true_dy == 0:
             scale_dy = 1
         scale_x = (self.screen_width - (2 * safe_margin)) / scale_dx
         scale_y = (self.screen_height - (2 * safe_margin)) / scale_dy
         self.scale = min(scale_x, scale_y)
-        ideal_size = self.scale/4
+        ideal_size = self.scale / 4
         self.circle_radius_size = max(5, min(ideal_size, 40))
-        self.offset_x = ((self.screen_width - (true_dx*self.scale)))/2
-        self.offset_y = ((self.screen_height) - (true_dy*self.scale))/2
+        self.offset_x = (self.screen_width - (true_dx * self.scale)) / 2
+        self.offset_y = ((self.screen_height) - (true_dy * self.scale)) / 2
 
     def get_x_real_coords(self, x_coords):
-        return((x_coords - self.x_min)*self.scale + self.offset_x)
+        return (x_coords - self.x_min) * self.scale + self.offset_x
 
     def get_y_real_coords(self, y_coords):
-        return((self.y_max - y_coords)*self.scale + self.offset_y)
+        return (self.y_max - y_coords) * self.scale + self.offset_y
 
     def create_hubs(self, context: Context):
         hubs = context.hubs
@@ -70,13 +77,21 @@ class MapVisualizer():
         for hub in hubs.values():
             x = self.get_x_real_coords(hub.x)
             y = self.get_y_real_coords(hub.y)
-            if(hub.metadata.color is not None and hub.metadata.color in self.available_colors):
+            if (
+                hub.metadata.color is not None
+                and hub.metadata.color in self.available_colors
+            ):
                 color = hub.metadata.color
             else:
                 color = random.choice(self.available_colors)
             self._create_circle(x, y, self.circle_radius_size, fill=color)
-            self.canvas.create_text(x,y - (self.circle_radius_size+10),fill="black",font="Verdana 10 bold",
-                            text=hub.name)
+            self.canvas.create_text(
+                x,
+                y - (self.circle_radius_size + 10),
+                fill="black",
+                font="Verdana 10 bold",
+                text=hub.name,
+            )
 
     def load_map(self, context):
         self.setup_map_data(context)
@@ -84,4 +99,4 @@ class MapVisualizer():
         # self.spawn_png()
         self.create_hubs(context)
         self.root.title("FLY IN")
-        return(self.canvas, self.root, self.circle_radius_size)
+        return (self.canvas, self.root, self.circle_radius_size)
