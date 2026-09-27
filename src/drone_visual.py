@@ -1,13 +1,14 @@
 import tkinter as tk
 from .models import Context
 from math import cos, sin, sqrt, ceil
+from .load_map import MapVisualizer
 
 
 class DroneMoves:
     def __init__(
-        self, moves: list[str], context: Context, canvas,
-            root, my_visual, circle_size):
-        self.circle_size = circle_size
+        self, moves: list[str], context: Context, canvas: tk.Canvas,
+            root: tk.Tk, my_visual: MapVisualizer, circle_size: int) -> None:
+        self.circle_size: int = circle_size
         self.moves: list[str] = moves
         self.root = root
         self.context = context
@@ -16,15 +17,15 @@ class DroneMoves:
             self.resize_drone_img())
         self.canvas = canvas
         self.load_map = my_visual
-        self.drone_and_hub: dict[tuple[float, float], str] = {}
+        self.drone_and_hub: dict[tuple[float, float], list[str]] = {}
         self.label = tk.Label(root, font=("Helvetica 40 bold"),
                               background="green", foreground="white")
         self.label.place(x=50, y=50)
-        self.drone_img_ids: dict[str, str] = {}
+        self.drone_img_ids: dict[str, int] = {}
         self.current_drone_pos: dict[str, str] = {}
         self.target_positions: dict[str, tuple[float, float]] = {}
 
-    def get_simulation_turn(self, move):
+    def get_simulation_turn(self, move: str) -> list[str]:
         return move.split()
 
     def resize_drone_img(self) -> int:
@@ -35,7 +36,7 @@ class DroneMoves:
         n = ceil(diagonal / (2 * radius))
         return n
 
-    def process(self, simulation):
+    def process(self, simulation: list[str]) -> None:
         """Need to create a dict of type dict[position: list[Drone_id]]"""
         self.drone_and_hub = {}
         for drone in simulation:
@@ -79,11 +80,11 @@ class DroneMoves:
                     y = (y1 + y2) / 2
                 else:
                     continue
-
-            if (x, y) not in self.drone_and_hub:
-                self.drone_and_hub.update({(x, y): [id]})
+            coords = (x, y)
+            if coords not in self.drone_and_hub:
+                self.drone_and_hub.update({coords: [id]})
             else:
-                self.drone_and_hub[(x, y)].append(id)
+                self.drone_and_hub[coords].append(id)
 
         for coords, drone_list in self.drone_and_hub.items():
             center_x, center_y = coords
@@ -103,7 +104,8 @@ class DroneMoves:
                     self.drone_img_ids.update({ids: img_id})
                 self.target_positions[ids] = (x, y)
 
-    def animate_step(self, current_step, max_steps, current_index):
+    def animate_step(self, current_step: int,
+                     max_steps: int, current_index: int) -> None:
         if current_step <= max_steps:
             for ids, target_coords in self.target_positions.items():
                 if ids in self.drone_img_ids:
@@ -119,7 +121,7 @@ class DroneMoves:
         else:
             self.root.after(300, self.tick_function, current_index + 1)
 
-    def tick_function(self, current_index):
+    def tick_function(self, current_index: int) -> None:
         """process one move from the moves list"""
         if current_index == len(self.moves):
             return
@@ -131,12 +133,13 @@ class DroneMoves:
             self.process(simulation)
             self.animate_step(1, 30, current_index)
 
-    def tick_counter(self, current_index):
+    def tick_counter(self, current_index: int) -> None:
         self.label["text"] = f"Tick_counter {current_index}"
 
-    def display_drones(self):
+    def display_drones(self) -> None:
         start_hub_name = next(
-            hub for hub in self.context.hubs.values() if hub.role == "start_hub"
+            hub for hub in self.context.hubs.values()
+            if hub.role == "start_hub"
         ).name
         fake_initial_simulation = [
             f"D{i + 1}-{start_hub_name}" for i in range(self.nb_drone)

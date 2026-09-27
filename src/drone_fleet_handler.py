@@ -1,12 +1,14 @@
-from typing import List, Optional
-from .path_finder import PathFinder as PF
+from typing import Optional
+
+from .models import Connection
 from .parser import Context
+from .path_finder import PathFinder as PF
 
 
 class Drone:
-    def __init__(self, drone_id: str):
+    def __init__(self, drone_id: str) -> None:
         self.drone_id: str = drone_id
-        self.flight_plan: List[str] = []
+        self.flight_plan: list[str] = []
         self.current_hub: str = ""
         self.previous_hub: str = ""
         self.turns_remaining: int = 0
@@ -17,10 +19,10 @@ class DronesFleetHandler:
     def __init__(self, context: Context) -> None:
         self.context = context
         self.hubs = context.hubs
-        self.connections = context.connections
+        self.connections: list[Connection] = list(context.connections)
         self.path_finder = PF(context)
 
-        self.drones: List[Drone] = []
+        self.drones: list[Drone] = []
         self.nb_drones: int = 0
 
         self.start = next(
@@ -36,7 +38,7 @@ class DronesFleetHandler:
             drone.current_hub = self.start
             drone.previous_hub = self.start
 
-    def get_connection(self, zone1: str, zone2: str):
+    def get_connection(self, zone1: str, zone2: str) -> Optional[Connection]:
         for conn in self.connections:
             if (conn.source == zone1 and conn.target == zone2) or (
                 conn.source == zone2 and conn.target == zone1
@@ -55,67 +57,67 @@ class DronesFleetHandler:
         hub = self.hubs[zone_name]
         if hub.role in ["start_hub", "end_hub"]:
             return True
-        max_cap = (
-            hub.metadata.max_drones
-            if (hub.metadata and hasattr(hub.metadata, "max_drones"))
-            else 1
-        )
+        max_cap = getattr(hub.metadata, "max_drones", 1)
         return getattr(hub, "current_nb_drones", 0) < max_cap
 
-    def has_connection_capacity(self, conn) -> bool:
-        max_cap = (
-            conn.metadata.max_link_capacity
-            if (conn.metadata and hasattr(conn.metadata, "max_link_capacity"))
-            else 1
-        )
+    def has_connection_capacity(self, conn: Connection) -> bool:
+        max_cap = getattr(conn.metadata, "max_link_capacity", 1)
         return getattr(conn, "current_drones", 0) < max_cap
 
-    def reserve_hub(self, zone_name: str, increment: int):
+    def reserve_hub(self, zone_name: str, increment: int) -> None:
         hub = self.hubs[zone_name]
         if hub.role not in ["start_hub", "end_hub"]:
-            if not hasattr(hub, "current_nb_drones"):
-                hub.current_nb_drones = 0
-            hub.current_nb_drones += increment
+            current = getattr(hub, "current_nb_drones", 0)
+            setattr(hub, "current_nb_drones", current + increment)
 
-    def reserve_connection(self, conn, increment: int):
-        if not hasattr(conn, "current_drones"):
-            conn.current_drones = 0
-        conn.current_drones += increment
+    def reserve_connection(self, conn: Connection, increment: int) -> None:
+        current = getattr(conn, "current_drones", 0)
+        setattr(conn, "current_drones", current + increment)
 
     def process_drone(self, drone: Drone) -> Optional[str]:
         if drone.turns_remaining > 0:
             drone.turns_remaining -= 1
             if drone.turns_remaining == 0:
+                if drone.reserved_destination is None:
+                    return None
+
                 conn = self.get_connection(
                     drone.previous_hub, drone.reserved_destination
                 )
+                if conn is None:
+                    return None
+
                 self.reserve_connection(conn, -1)
 
                 drone.current_hub = drone.reserved_destination
                 drone.reserved_destination = None
 
                 return f"{drone.drone_id}-{drone.current_hub}"
-            else:
-                return None
+
+            return None
 
         drone.flight_plan = self.path_finder.run_djikstra(drone.current_hub)
 
         if not drone.flight_plan:
             return None
 
-        next_hub_name = None
+        next_hub_name: Optional[str] = None
         for step in drone.flight_plan:
             if step != drone.current_hub:
                 next_hub_name = step
                 break
 
-        if not next_hub_name:
+        if next_hub_name is None:
             return None
 
         conn = self.get_connection(drone.current_hub, next_hub_name)
+        if conn is None:
+            return None
 
-        if (not self.has_hub_capacity(next_hub_name) or
-                not self.has_connection_capacity(conn)):
+        if (
+            not self.has_hub_capacity(next_hub_name)
+            or not self.has_connection_capacity(conn)
+        ):
             alt_plan = self.path_finder.run_djikstra(
                 drone.current_hub, ignored_nodes=[next_hub_name]
             )
@@ -125,7 +127,7 @@ class DronesFleetHandler:
                 alt_conn = self.get_connection(drone.current_hub, alt_next_hub)
 
                 if (
-                    alt_conn
+                    alt_conn is not None
                     and self.has_hub_capacity(alt_next_hub)
                     and self.has_connection_capacity(alt_conn)
                 ):
@@ -150,27 +152,26 @@ class DronesFleetHandler:
             conn_name = getattr(conn, "name", f"{conn.source}-{conn.target}")
             return f"{drone.drone_id}-{conn_name}"
 
-        else:
-            self.reserve_hub(next_hub_name, 1)
-            drone.previous_hub = drone.current_hub
-            drone.current_hub = next_hub_name
+        self.reserve_hub(next_hub_name, 1)
+        drone.previous_hub = drone.current_hub
+        drone.current_hub = next_hub_name
 
-            return f"{drone.drone_id}-{drone.current_hub}"
+        return f"{drone.drone_id}-{drone.current_hub}"
 
-    def handle_drones(self, nb_drones: int) -> List[str]:
+    def handle_drones(self, nb_drones: int) -> list[str]:
         self.nb_drones = nb_drones
         self.initialize_drones()
 
-        logs_list: List[str] = []
-        finished_drones: set[int] = set()
+        logs_list: list[str] = []
+        finished_drones: set[str] = set()
 
         max_turns = 2000
         turn = 0
 
         while len(finished_drones) < nb_drones and turn < max_turns:
-            turn_logs = []
+            turn_logs: list[str] = []
 
-            has_moved_this_turn = set()
+            has_moved_this_turn: set[str] = set()
             moved_in_pass = True
             while moved_in_pass:
                 moved_in_pass = False
@@ -189,8 +190,10 @@ class DronesFleetHandler:
                         has_moved_this_turn.add(drone.drone_id)
                         moved_in_pass = True
 
-                    if (drone.current_hub == self.goal
-                            and drone.turns_remaining == 0):
+                    if (
+                        drone.current_hub == self.goal
+                        and drone.turns_remaining == 0
+                    ):
                         finished_drones.add(drone.drone_id)
 
             if turn_logs:
@@ -200,6 +203,8 @@ class DronesFleetHandler:
                     break
 
             turn += 1
-        if logs_list == []:
+
+        if not logs_list:
             raise ValueError("Map impossible to solve provide another map!")
+
         return logs_list

@@ -1,6 +1,15 @@
-from .models import Hub, Connection, Context, HubMetadata, ConnectionMetadata, ParsedHubMeta
+from .models import Hub, Connection, Context, HubRole
+from .models import HubMetadata, ConnectionMetadata, ZoneType
 import re
-from typing import Literal, cast
+from typing import cast, TypedDict
+
+
+class ParsedHubMeta(TypedDict, total=False):
+    color: str | None
+    max_drones: int
+    zone: ZoneType
+
+
 class MapParser:
     def __init__(self, filepath: str):
         self.filepath = filepath
@@ -14,14 +23,22 @@ class MapParser:
         self.hubs: dict[str, Hub] = {}
         self.nb_drone_declared: bool = False
 
-    def _parsing_meta_hub(self, metadata: str) -> dict[str, int | str] | None:
+    def _parsing_meta_hub(self, metadata: str) -> ParsedHubMeta:
         meta_dict: ParsedHubMeta = {}
-        zone_type = ["normal", "restricted", "blocked", "priority"]
-        allowed_types = ["zone", "color", "max_drones"]
+        zone_type: set[str] = {"normal", "restricted", "blocked", "priority"}
+        allowed_types: set[str] = {"zone", "color", "max_drones"}
+
+        if not metadata.strip():
+            return meta_dict
+
         for item in metadata.split():
+            if "=" not in item:
+                raise ValueError(f"Line {self.current_line}: "
+                                 f"Invalide metadata syntax "
+                                 f"<<{item}>>")
             key, val = item.split("=")
-            if key in ["max_drones", "max_link_capacity"]:
-                meta_dict[key] = int(val)
+            if key in ["max_drones"]:
+                meta_dict["max_drones"] = int(val)
             if key not in allowed_types:
                 raise ValueError(
                     f"Line {self.current_line}\n"
@@ -34,6 +51,7 @@ class MapParser:
                     f"zone type: {val} does not exist \n"
                     f"Allowed zones types: {zone_type}"
                 )
+                meta_dict["zone"] = cast(ZoneType, val)
             if key == "max_drones":
                 if not val.isdigit():
                     raise ValueError(
@@ -41,9 +59,9 @@ class MapParser:
                         f"max_drones must be a positive integer\n"
                         f"current: <<{val}>>"
                     )
-                meta_dict[key] = int(val)
-            else:
-                meta_dict[key] = val
+                    meta_dict["max_drones"] = int(val)
+            elif key == "color":
+                meta_dict["color"] = val
         return meta_dict
 
     def _parsing_meta_connection(self, metadata: str) -> ConnectionMetadata:
@@ -89,7 +107,7 @@ class MapParser:
         self.nb_drone_declared = True
         self.nb_drones = nb_drones
 
-    def _parse_hub(self, line: str):
+    def _parse_hub(self, line: str) -> None:
         meta: ParsedHubMeta = {}
         if "[" in line or "]" in line:
             match = re.search(r"\[([^\[\]]+)\]\s*$", line)
@@ -165,7 +183,7 @@ class MapParser:
             role = "start_hub"
         else:
             role = "end_hub"
-
+        hub_role = cast(HubRole, role)
         if meta:
             meta_hub = HubMetadata(
                 color=meta.get("color"),
@@ -173,12 +191,13 @@ class MapParser:
                 zone=meta.get('zone', 'normal'),
             )
         new_hub = Hub(
-            x=int(x_coord), y=int(y_coord), name=hub_name, role=role, metadata=meta_hub
+            x=int(x_coord), y=int(y_coord), name=hub_name,
+            role=hub_role, metadata=meta_hub
         )
         self.zone_names.append(hub_name)
         self.hubs.update({hub_name: new_hub})
 
-    def _parse_connection(self, line: str):
+    def _parse_connection(self, line: str) -> None:
         meta_parsed = None
         if "[" in line or "]" in line:
             match = re.search(r"\[([^\[\]]+)\]\s*$", line)
