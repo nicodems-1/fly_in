@@ -26,10 +26,6 @@ class MapVisualizer:
         self.offset_y = 0
         self.circle_radius_size = 0
         self.available_colors: list[str] = colors()
-        # self.portal = self.img = tk.PhotoImage(file="portal.png").subsample(18)
-
-    def spawn_png(self):
-        image = self.canvas.create_image(100, 100, anchor=tk.NW, image=self.img)
 
     def _create_circle(self, x, y, r, **kwargs):
         return self.canvas.create_oval(x - r, y - r, x + r, y + r, **kwargs)

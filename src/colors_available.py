@@ -1,5 +1,5 @@
 def colors() -> list[str]:
-    colors = (
+    colors: list[tuple[str, str, tuple[int, int, int]]] = [
         ("alice blue", "#f0f8ff", (240, 248, 255)),
         ("AliceBlue", "#f0f8ff", (240, 248, 255)),
         ("antique white", "#faebd7", (250, 235, 215)),
@@ -760,9 +760,9 @@ def colors() -> list[str]:
         ("yellow3", "#cdcd00", (205, 205, 0)),
         ("yellow4", "#8b8b00", (139, 139, 0)),
         ("YellowGreen", "#9acd32", (154, 205, 50)),
-    )
+    ]
 
-    color_list = []
+    color_list: list[str] = []
     for color, _, _ in colors:
         color_list.append(color)
     return color_list

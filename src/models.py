@@ -1,12 +1,21 @@
 from dataclasses import dataclass, field
-from typing import Literal, Dict, List
+from typing import Literal, Dict, List, TypedDict
 
 
 @dataclass
 class HubMetadata:
-    color: str = "none"
+    color: str | None = None
     max_drones: int = 1
     zone: Literal["normal", "restricted", "priority", "blocked"] = "normal"
+
+
+ZoneType = Literal["normal", "restricted", "priority", "blocked"]
+
+
+class ParsedHubMeta(TypedDict, total=False):
+    color: str | None
+    max_drones: int
+    zone: ZoneType
 
 
 @dataclass
@@ -23,7 +32,6 @@ class Hub:
     y: int
     name: str
     role: Literal["start_hub", "end_hub", "hub"]
-    # Toujours instancié : plus besoin de vérifier si c'est None !
     metadata: HubMetadata = field(default_factory=HubMetadata)
     current_nb_drones: int = 0
 

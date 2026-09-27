@@ -1,7 +1,7 @@
 from .parser import MapParser
-from .models import Context
+# from .models import Context
 from .load_map import MapVisualizer
-from .path_finder import PathFinder
+# from .path_finder import PathFinder
 from .drone_fleet_handler import DronesFleetHandler
 from .drone_visual import DroneMoves
 import sys
@@ -12,10 +12,9 @@ def main() -> None:
     if not file_path:
         print("Error: No Path given")
         sys.exit(1)
-    MP = MapParser(file_path)
-    my_context = MP.parse()
-    print(my_context)
-    my_visual = MapVisualizer()
+    mp = MapParser(file_path)
+    my_context = mp.parse()
+    my_visual: MapVisualizer = MapVisualizer()
     dfh = DronesFleetHandler(my_context)
     canvas, root, circle_radius_size = my_visual.load_map(my_context)
     moves = dfh.handle_drones(my_context.nb_drones)
@@ -26,10 +25,12 @@ def main() -> None:
     root.mainloop()
 
 
-try:
-    if __name__ == "__main__":
-        main()
-except ValueError as e:
-    print(e)
-except FileNotFoundError as e:
-    print("Line 30 in function main", e)
+# try:
+#     if __name__ == "__main__":
+main()
+# except ValueError as e:
+#     print(e)
+# except FileNotFoundError as e:
+#     print("The path is wrong or the file does not exist", e)
+# except PermissionError as e:
+#     print("Cannot open the map \n", e)

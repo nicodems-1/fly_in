@@ -5,20 +5,20 @@ from math import cos, sin, sqrt, ceil
 
 class DroneMoves:
     def __init__(
-        self, moves: list[str], context: Context, canvas, root, my_visual, circle_size
-    ):
+        self, moves: list[str], context: Context, canvas,
+            root, my_visual, circle_size):
         self.circle_size = circle_size
         self.moves: list[str] = moves
         self.root = root
         self.context = context
         self.nb_drone = context.nb_drones
-        self.img = tk.PhotoImage(file="drone.png").subsample(self.resize_drone_img())
+        self.img = tk.PhotoImage(file="drone.png").subsample(
+            self.resize_drone_img())
         self.canvas = canvas
         self.load_map = my_visual
         self.drone_and_hub: dict[tuple[float, float], str] = {}
-        self.label = tk.Label(
-            root, font=("Helvetica 40 bold"), background="green", foreground="white"
-        )
+        self.label = tk.Label(root, font=("Helvetica 40 bold"),
+                              background="green", foreground="white")
         self.label.place(x=50, y=50)
         self.drone_img_ids: dict[str, str] = {}
         self.current_drone_pos: dict[str, str] = {}
@@ -46,8 +46,10 @@ class DroneMoves:
         self.drone_and_hub = {}
         for id, target_name in self.current_drone_pos.items():
             if target_name in self.context.hubs:
-                x = self.load_map.get_x_real_coords(self.context.hubs[target_name].x)
-                y = self.load_map.get_y_real_coords(self.context.hubs[target_name].y)
+                x = self.load_map.get_x_real_coords(
+                    self.context.hubs[target_name].x)
+                y = self.load_map.get_y_real_coords(
+                    self.context.hubs[target_name].y)
             else:
                 conn_obj = next(
                     (
@@ -106,14 +108,14 @@ class DroneMoves:
             for ids, target_coords in self.target_positions.items():
                 if ids in self.drone_img_ids:
                     target_x, target_y = target_coords
-                    current_x, current_y = self.canvas.coords(self.drone_img_ids[ids])
+                    current_x, current_y = self.canvas.coords(
+                        self.drone_img_ids[ids])
                     frames_left = max_steps - current_step + 1
                     dx = (target_x - current_x) / frames_left
                     dy = (target_y - current_y) / frames_left
                     self.canvas.move(self.drone_img_ids[ids], dx, dy)
-            self.root.after(
-                30, self.animate_step, current_step + 1, max_steps, current_index
-            )
+            self.root.after(30, self.animate_step,
+                            current_step + 1, max_steps, current_index)
         else:
             self.root.after(300, self.tick_function, current_index + 1)
 
@@ -122,8 +124,8 @@ class DroneMoves:
         if current_index == len(self.moves):
             return
         else:
+            self.tick_counter(current_index + 1)
             simulation = self.get_simulation_turn(self.moves[current_index])
-            self.tick_counter(current_index)
 
             self.target_positions = {}
             self.process(simulation)
@@ -140,5 +142,6 @@ class DroneMoves:
             f"D{i + 1}-{start_hub_name}" for i in range(self.nb_drone)
         ]
         self.process(fake_initial_simulation)
+        self.tick_counter(0)
         self.tick_function(0)
         """display the drone in the line """

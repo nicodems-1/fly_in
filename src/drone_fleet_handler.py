@@ -114,9 +114,8 @@ class DronesFleetHandler:
 
         conn = self.get_connection(drone.current_hub, next_hub_name)
 
-        if not self.has_hub_capacity(next_hub_name) or not self.has_connection_capacity(
-            conn
-        ):
+        if (not self.has_hub_capacity(next_hub_name) or
+                not self.has_connection_capacity(conn)):
             alt_plan = self.path_finder.run_djikstra(
                 drone.current_hub, ignored_nodes=[next_hub_name]
             )
@@ -163,7 +162,7 @@ class DronesFleetHandler:
         self.initialize_drones()
 
         logs_list: List[str] = []
-        finished_drones = set()
+        finished_drones: set[int] = set()
 
         max_turns = 2000
         turn = 0
@@ -190,7 +189,8 @@ class DronesFleetHandler:
                         has_moved_this_turn.add(drone.drone_id)
                         moved_in_pass = True
 
-                    if drone.current_hub == self.goal and drone.turns_remaining == 0:
+                    if (drone.current_hub == self.goal
+                            and drone.turns_remaining == 0):
                         finished_drones.add(drone.drone_id)
 
             if turn_logs:
@@ -200,5 +200,6 @@ class DronesFleetHandler:
                     break
 
             turn += 1
-        print(logs_list)
+        if logs_list == []:
+            raise ValueError("Map impossible to solve provide another map!")
         return logs_list

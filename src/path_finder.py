@@ -7,7 +7,7 @@ class PathFinder:
         self.context = context
         self.came_from: dict[str, str | None] = {}
         self.cost_so_far: dict[str, int] = {}
-        self.queue: list[tuple[str, int]] = []
+        self.queue: list[tuple[str, int, int]] = []
         self.flight_plan: list[str] = []
         self.adj = self.build_adjacency_list()
         self.start_hub = next(iter(context.hubs.values())).name
@@ -22,35 +22,13 @@ class PathFinder:
         for hub in hubs.values():
             next_hubs = []
             for connection in connections:
-                if hub.name in connection.source:
-                    next_hubs.append(hubs[connection.target].name)
+                if connection.source == hub.name:
+                    next_hubs.append(connection.target)
+                elif connection.target == hub.name:
+                    next_hubs.append(connection.source)
             next_hubs.append(hub.name)
             adjacency_list.update({hub.name: next_hubs})
         return adjacency_list
-
-    def get_connection_metadata(self, next_hub, start_hub) -> tuple[int, int]:
-        connections = self.context.connections
-        for connection in connections:
-            if (
-                connection.source == start_hub
-                and connection.target == next_hub
-                and connection.metadata is not None
-            ):
-                return (
-                    connection.current_link_capacity,
-                    connection.metadata.max_link_capacity,
-                )
-
-            if (
-                connection.source == next_hub
-                and connection.target == start_hub
-                and connection.metadata is not None
-            ):
-                return (
-                    connection.current_link_capacity,
-                    connection.metadata.max_link_capacity,
-                )
-        return (0, 110)
 
     def get_cost(self, next_hub: str, start_hub: str) -> float | int:
         metadata = self.context.hubs[next_hub].metadata
@@ -60,29 +38,41 @@ class PathFinder:
             return 1
         if metadata.zone == "blocked":
             return float("inf")
+        if metadata.zone == "restricted":
+            return 2
         return 1
 
     def update_queue(self, hub_neighboor: str, previous_node: str, base_node: str):
         for hub in hub_neighboor:
+            meta = self.context.hubs[hub].metadata
+            priority_score = 0 if (meta and meta.zone == "priority") else 1
+
             cost_current = self.get_cost(hub, base_node)
             if cost_current == float("inf"):
                 continue
+
             cost_previous = self.cost_so_far[previous_node]
             challenger_cost = cost_current + cost_previous
+
             if (hub not in self.cost_so_far) or (
                 challenger_cost < self.cost_so_far[hub]
             ):
                 self.cost_so_far.update({hub: challenger_cost})
                 self.came_from.update({hub: previous_node})
-                heapq.heappush(self.queue, (challenger_cost, hub))
+                heapq.heappush(self.queue, (challenger_cost, priority_score, hub))
 
     def engine_loop(self, current_hub, ignored_nodes):
         self.cost_so_far.update({current_hub: 0})
-        heapq.heappush(self.queue, (0, current_hub))
+
+        meta = self.context.hubs[current_hub].metadata
+        priority_score = 0 if (meta and meta.zone == "priority") else 1
+
+        heapq.heappush(self.queue, (0, priority_score, current_hub))
         heapq.heapify(self.queue)
+
         self.came_from[current_hub] = None
         while self.queue:
-            cost, popped = heapq.heappop(self.queue)
+            cost, _, popped = heapq.heappop(self.queue)
             if popped == self.goal:
                 break
             if popped in ignored_nodes:
