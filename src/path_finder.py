@@ -20,6 +20,7 @@ class PathFinder:
         start_hub (str): The starting hub name.
         goal (str): The destination hub name.
     """
+
     def __init__(self, context: Context) -> None:
         """Initialize the PathFinder with the simulation context.
 
@@ -62,13 +63,16 @@ class PathFinder:
         return adjacency_list
 
     def get_cost(self, next_hub: str) -> float:
-        """Determine the traversal cost for a specific hub based on its metadata.
+        """Determine the traversal cost for a specific hub based
+        on its metadata.
 
         Args:
             next_hub (str): The name of the hub to evaluate.
 
         Returns:
-            float: The cost to enter the hub (1.0 for normal, 2.0 for restricted, infinity for blocked).
+            float: The cost to enter the hub (1.0 for normal, 2.0
+            for restricted,
+            infinity for blocked).
         """
         metadata = self.context.hubs[next_hub].metadata
         if metadata is None:
@@ -79,17 +83,22 @@ class PathFinder:
             return 2.0
         return 1.0
 
-    def update_queue(self, hub_neighboor: list[str],
-                     previous_node: str, base_node: str) -> None:
+    def update_queue(
+        self, hub_neighboor: list[str], previous_node: str, base_node: str
+    ) -> None:
         """Evaluate neighbor hubs and update the pathfinding priority queue.
 
-        Calculates cumulative costs to reach neighboring hubs. If a cheaper path is found, 
-        updates the tracking dictionaries and pushes the new path to the priority queue.
+        Calculates cumulative costs to reach neighboring hubs.
+        If a cheaper path is found,
+        updates the tracking dictionaries and pushes the new path to the
+        priority queue.
 
         Args:
-            hub_neighboor (list[str]): The list of neighboring hub names to evaluate.
+            hub_neighboor (list[str]): The list of neighboring hub names to
+            evaluate.
             previous_node (str): The name of the hub currently being expanded.
-            base_node (str): The initial starting node of the current path search.
+            base_node (str): The initial starting node of the current path
+            search.
         """
         for hub in hub_neighboor:
             meta = self.context.hubs[hub].metadata
@@ -113,12 +122,13 @@ class PathFinder:
     def engine_loop(self, current_hub: str, ignored_nodes: list[str]) -> None:
         """Execute the core Dijkstra pathfinding loop.
 
-        Explores the map graph from the current hub, evaluating paths based on 
+        Explores the map graph from the current hub, evaluating paths based on
         cumulative cost until the goal is reached or the queue is exhausted.
 
         Args:
             current_hub (str): The starting hub for the current search.
-            ignored_nodes (list[str]): A list of node names to skip during exploration.
+            ignored_nodes (list[str]): A list of node names to skip during
+            exploration.
         """
         if self.get_cost(current_hub) == float("inf"):
             return
@@ -143,15 +153,17 @@ class PathFinder:
     def build_flight_plan(self, current_hub: str) -> list[str]:
         """Reconstruct the sequence of hubs from the computed path history.
 
-        Backtracks from the goal node through the `came_from` dictionary to 
+        Backtracks from the goal node through the `came_from` dictionary to
         build a chronological sequence of steps from start to finish.
 
         Args:
             current_hub (str): The starting node of the path.
 
         Returns:
-            list[str]: The ordered list of hub names comprising the flight plan. 
-                Returns a single waiting step `[current_hub, current_hub]` if no path exists.
+            list[str]: The ordered list of hub names comprising the
+            flight plan.
+                Returns a single waiting step `[current_hub, current_hub]`
+                if no path exists.
         """
         zone: str | None = self.goal
         flight_plan: list[str] = []
@@ -174,12 +186,14 @@ class PathFinder:
     ) -> list[str]:
         """Calculate and return the optimal flight plan to the goal.
 
-        Resets pathfinding state, runs the exploration algorithm, and reconstructs 
+        Resets pathfinding state, runs the exploration algorithm,
+        and reconstructs
         the final path.
 
         Args:
             current_hub (str): The hub from which to begin pathfinding.
-            ignored_nodes (list[str] | None, optional): Specific hubs to exclude from the search. Defaults to None.
+            ignored_nodes (list[str] | None, optional): Specific hubs to
+            exclude from the search. Defaults to None.
 
         Returns:
             list[str]: The computed optimal flight plan as a list of hub names.

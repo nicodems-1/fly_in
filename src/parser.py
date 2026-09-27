@@ -12,6 +12,7 @@ class ParsedHubMeta(TypedDict, total=False):
         max_drones (int): The maximum capacity of the hub.
         zone (ZoneType): The restriction type of the hub.
     """
+
     color: str | None
     max_drones: int
     zone: ZoneType
@@ -20,9 +21,9 @@ class ParsedHubMeta(TypedDict, total=False):
 class MapParser:
     """Parses a map configuration file to build a simulation Context.
 
-    Reads a custom text-based map format line by line, validating syntax, 
-    extracting map properties (number of drones, hubs, connections, metadata), 
-    and ensuring logical constraints (e.g., unique names, valid coordinates) 
+    Reads a custom text-based map format line by line, validating syntax,
+    extracting map properties (number of drones, hubs, connections, metadata),
+    and ensuring logical constraints (e.g., unique names, valid coordinates)
     are maintained.
 
     Attributes:
@@ -40,6 +41,7 @@ class MapParser:
         nb_drone_declared (bool): Tracks whether the drone count has
         been successfully parsed.
     """
+
     def __init__(self, filepath: str):
         """Initialize the MapParser.
 
@@ -83,9 +85,10 @@ class MapParser:
 
         for item in metadata.split():
             if "=" not in item:
-                raise ValueError(f"Line {self.current_line}: "
-                                 f"Invalide metadata syntax "
-                                 f"<<{item}>>")
+                raise ValueError(
+                    f"Line {self.current_line}: "
+                    f"Invalide metadata syntax <<{item}>>"
+                )
             key, val = item.split("=")
             if key in ["max_drones"]:
                 meta_dict["max_drones"] = int(val)
@@ -110,20 +113,24 @@ class MapParser:
                     )
             if key == "zone":
                 if zone is True:
-                    raise ValueError(f"Line {self.current_line}: "
-                                     f"zone already declared !")
+                    raise ValueError(
+                        f"Line {self.current_line}: zone already declared !"
+                    )
                 zone = True
                 meta_dict["zone"] = cast(ZoneType, val)
             elif key == "max_drones":
                 if max_drones is True:
-                    raise ValueError(f"Line {self.current_line}: "
-                                     f"max_drones already declared !")
+                    raise ValueError(
+                        f"Line {self.current_line}: "
+                        f"max_drones already declared !"
+                    )
                 max_drones = True
                 meta_dict["max_drones"] = int(val)
             elif key == "color":
                 if color is True:
-                    raise ValueError(f"Line {self.current_line}: "
-                                     f"color already declared !")
+                    raise ValueError(
+                        f"Line {self.current_line}: color already declared !"
+                    )
                 color = True
                 meta_dict["color"] = val
         return meta_dict
@@ -183,18 +190,18 @@ class MapParser:
         try:
             int(line.split()[1])
         except ValueError:
-            print(f"Line {self.current_line}: nb_drone "
-                  f"must be a positive integer")
+            print(f"Line {self.current_line}: nb_drone must be a "
+                  f"positive integer")
         nb_drones = int(line.split()[1])
         if nb_drones < 1:
             raise ValueError(
-                f"Line {self.current_line}: nb_drone "
-                f"must be a positive integer > 1"
+                f"Line {self.current_line}: nb_drone must be a "
+                f"positive integer > 1"
             )
         if self.skipped_line + 1 != self.current_line:
             raise ValueError(
-                f"Line {self.current_line} nb_drones "
-                f"should be on the first line"
+                f"Line {self.current_line} nb_drones should be "
+                f"on the first line"
             )
         self.nb_drone_declared = True
         self.nb_drones = nb_drones
@@ -202,7 +209,7 @@ class MapParser:
     def _parse_hub(self, line: str) -> None:
         """Parse a single line declaring a hub.
 
-        Extracts the hub type, name, coordinates, and optional metadata, then 
+        Extracts the hub type, name, coordinates, and optional metadata, then
         constructs a Hub object and adds it to the parser's state.
 
         Args:
@@ -242,8 +249,8 @@ class MapParser:
         hub_type = ["start_hub", "end_hub", "hub"]
         if splitted[0].strip(":") not in hub_type:
             raise ValueError(
-                f"Line {self.current_line} <<{splitted[0]}>> is "
-                f"not a valid hub_type"
+                f"Line {self.current_line} <<{splitted[0]}>> "
+                f"is not a valid hub_type"
             )
         hub_name = splitted[1]
         if hub_name in self.zone_names:
@@ -295,11 +302,14 @@ class MapParser:
             meta_hub = HubMetadata(
                 color=meta.get("color"),
                 max_drones=meta.get("max_drones", 1),
-                zone=meta.get('zone', 'normal'),
+                zone=meta.get("zone", "normal"),
             )
         new_hub = Hub(
-            x=int(x_coord), y=int(y_coord), name=hub_name,
-            role=hub_role, metadata=meta_hub
+            x=int(x_coord),
+            y=int(y_coord),
+            name=hub_name,
+            role=hub_role,
+            metadata=meta_hub,
         )
         self.zone_names.append(hub_name)
         self.hubs.update({hub_name: new_hub})
@@ -307,7 +317,7 @@ class MapParser:
     def _parse_connection(self, line: str) -> None:
         """Parse a single line declaring a connection between two hubs.
 
-        Extracts the source and target hubs, validates their existence, parses 
+        Extracts the source and target hubs, validates their existence, parses
         optional metadata, and constructs a Connection object.
 
         Args:
@@ -349,8 +359,8 @@ class MapParser:
         zones = splitted[1].split("-")
         if len(zones) != 2:
             raise ValueError(
-                f"Line {self.current_line} Connection "
-                f"format not respected\n {zones}"
+                f"Line {self.current_line} "
+                f"Connection format not respected\n {zones}"
             )
         conn_1, conn_2 = zones
         if conn_1 not in self.zone_names:

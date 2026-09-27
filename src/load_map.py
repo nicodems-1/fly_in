@@ -29,6 +29,7 @@ class MapVisualizer:
         The calculated radius for drawing hub circles.
         available_colors (list[str]): A list of valid Tkinter color names.
     """
+
     def __init__(self) -> None:
         self.root: tk.Tk = tk.Tk()
         self.screen_width: int = self.root.winfo_screenwidth()
@@ -51,23 +52,21 @@ class MapVisualizer:
         self.circle_radius_size: int = 0
         self.available_colors: list[str] = colors()
 
-    def _create_circle(
-        self, x: float, y: float, r: float, **kwargs: Any
-    ) -> int:
+    def _create_circle(self, x: float,
+                       y: float, r: float, **kwargs: Any) -> int:
         """Draw a circle on the canvas.
 
         Args:
             x (float): The X coordinate of the circle's center.
             y (float): The Y coordinate of the circle's center.
             r (float): The radius of the circle.
-            **kwargs (Any): Additional keyword arguments for the Tkinter create_oval method (e.g., fill color).
+            **kwargs (Any): Additional keyword arguments for the Tkinter
+            create_oval method (e.g., fill color).
 
         Returns:
             int: The integer ID of the created canvas item.
         """
-        return self.canvas.create_oval(
-            x - r, y - r, x + r, y + r, **kwargs
-        )
+        return self.canvas.create_oval(x - r, y - r, x + r, y + r, **kwargs)
 
     def setup_map_data(self, context: Context) -> None:
         """Calculate and set the scaling and offset values for the map.
@@ -139,9 +138,10 @@ class MapVisualizer:
     def create_hubs(self, context: Context) -> None:
         """Draw the connections and hubs on the canvas.
 
-        Iterates through the context to draw lines representing connections, 
-        followed by circles and labels representing the hubs. Assigns colors 
-        based on hub metadata or picks a random color if metadata is invalid or missing.
+        Iterates through the context to draw lines representing connections,
+        followed by circles and labels representing the hubs. Assigns colors
+        based on hub metadata or picks a random color if metadata is invalid
+        or missing.
 
         Args:
             context (Context): The map context containing hubs and connections.
@@ -160,9 +160,11 @@ class MapVisualizer:
             x = self.get_x_real_coords(hub.x)
             y = self.get_y_real_coords(hub.y)
 
-            if (hub.metadata is not None
+            if (
+                hub.metadata is not None
                 and hub.metadata.color is not None
-                    and hub.metadata.color in self.available_colors):
+                and hub.metadata.color in self.available_colors
+            ):
                 color = hub.metadata.color
             else:
                 color = random.choice(self.available_colors)

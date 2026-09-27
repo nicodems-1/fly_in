@@ -10,12 +10,17 @@ class Drone:
 
     Attributes:
         drone_id (str): The unique identifier for the drone.
-        flight_plan (list[str]): The planned sequence of hubs to reach the goal.
-        current_hub (str): The name of the hub the drone is currently located at.
+        flight_plan (list[str]):
+        The planned sequence of hubs to reach the goal.
+        current_hub (str): The name of the hub the drone is currently located
+        at.
         previous_hub (str): The name of the previous hub the drone visited.
-        turns_remaining (int): The number of turns the drone must wait in transit.
-        reserved_destination (Optional[str]): The target hub reserved for the drone while in transit.
+        turns_remaining (int): The number of turns the drone must wait
+        in transit.
+        reserved_destination (Optional[str]):
+        The target hub reserved for the drone while in transit.
     """
+
     def __init__(self, drone_id: str) -> None:
         """Initialize a new Drone instance.
 
@@ -50,11 +55,13 @@ class DronesFleetHandler:
         start (str): The name of the starting hub.
         goal (str): The name of the destination hub.
     """
+
     def __init__(self, context: Context) -> None:
         """Initialize the DronesFleetHandler with a specific map context.
 
         Args:
-            context (Context): The parsed context containing map constraints, hubs, and connections.
+            context (Context): The parsed context containing map constraints,
+            hubs, and connections.
         """
         self.context = context
         self.hubs = context.hubs
@@ -129,13 +136,15 @@ class DronesFleetHandler:
         return getattr(hub, "current_nb_drones", 0) < max_cap
 
     def has_connection_capacity(self, conn: Connection) -> bool:
-        """Determine if a connection can accommodate an additional drone in transit.
+        """Determine if a connection can accommodate an
+        additional drone in transit.
 
         Args:
             conn (Connection): The connection to check.
 
         Returns:
-            bool: True if the connection has available capacity, False otherwise.
+            bool: True if the connection has available capacity,
+            False otherwise.
         """
         max_cap = getattr(conn.metadata, "max_link_capacity", 1)
         return getattr(conn, "current_drones", 0) < max_cap
@@ -145,7 +154,8 @@ class DronesFleetHandler:
 
         Args:
             zone_name (str): The name of the hub to reserve or free up.
-            increment (int): The amount to change the capacity by (positive to reserve, negative to free).
+            increment (int): The amount to change the capacity by
+            (positive to reserve, negative to free).
         """
         hub = self.hubs[zone_name]
         if hub.role not in ["start_hub", "end_hub"]:
@@ -218,10 +228,8 @@ class DronesFleetHandler:
         if conn is None:
             return None
 
-        if (
-            not self.has_hub_capacity(next_hub_name)
-            or not self.has_connection_capacity(conn)
-        ):
+        if (not self.has_hub_capacity(next_hub_name)
+                or not self.has_connection_capacity(conn)):
             alt_plan = self.path_finder.run_djikstra(
                 drone.current_hub, ignored_nodes=[next_hub_name]
             )
@@ -311,10 +319,8 @@ class DronesFleetHandler:
                         has_moved_this_turn.add(drone.drone_id)
                         moved_in_pass = True
 
-                    if (
-                        drone.current_hub == self.goal
-                        and drone.turns_remaining == 0
-                    ):
+                    if (drone.current_hub == self.goal
+                            and drone.turns_remaining == 0):
                         finished_drones.add(drone.drone_id)
 
             if turn_logs:

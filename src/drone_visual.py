@@ -7,8 +7,8 @@ from .load_map import MapVisualizer
 class DroneMoves:
     """Visualizes the movement of a drone fleet on a Tkinter canvas.
 
-    Handles the resizing of drone images, calculation of coordinates for drones 
-    at hubs and along connections, and the frame-by-frame animation of their 
+    Handles the resizing of drone images, calculation of coordinates for drones
+    at hubs and along connections, and the frame-by-frame animation of their
     movements throughout the simulation.
 
     Attributes:
@@ -35,9 +35,16 @@ class DroneMoves:
         target_positions (dict[str, tuple[float, float]]):
         Mapping of drone IDs to their target (x, y) canvas coordinates.
     """
+
     def __init__(
-        self, moves: list[str], context: Context, canvas: tk.Canvas,
-            root: tk.Tk, my_visual: MapVisualizer, circle_size: int) -> None:
+        self,
+        moves: list[str],
+        context: Context,
+        canvas: tk.Canvas,
+        root: tk.Tk,
+        my_visual: MapVisualizer,
+        circle_size: int,
+    ) -> None:
         """Initialize the DroneMoves visualizer.
 
         Args:
@@ -53,13 +60,15 @@ class DroneMoves:
         self.root = root
         self.context = context
         self.nb_drone = context.nb_drones
-        self.img = tk.PhotoImage(file="drone.png").subsample(
-            self.resize_drone_img())
+        resize = self.resize_drone_img()
+        self.img = tk.PhotoImage(file="drone.png").subsample(resize)
         self.canvas = canvas
         self.load_map = my_visual
         self.drone_and_hub: dict[tuple[float, float], list[str]] = {}
-        self.label = tk.Label(root, font=("Helvetica 40 bold"),
-                              background="green", foreground="white")
+        self.label = tk.Label(
+            root, font=("Helvetica 40 bold"),
+            background="green", foreground="white"
+        )
         self.label.place(x=50, y=50)
         self.drone_img_ids: dict[str, int] = {}
         self.current_drone_pos: dict[str, str] = {}
@@ -80,7 +89,7 @@ class DroneMoves:
     def resize_drone_img(self) -> int:
         """Calculate the subsample factor needed to resize the drone image.
 
-        Computes the scaling factor based on the original image dimensions 
+        Computes the scaling factor based on the original image dimensions
         and the target circle size.
 
         Returns:
@@ -96,13 +105,17 @@ class DroneMoves:
     def process(self, simulation: list[str]) -> None:
         """Process a simulation turn to calculate target canvas coordinates.
 
-        Updates the current logical positions of the drones, determines the real 
-        canvas coordinates for those positions (whether at a hub or mid-connection), 
-        and calculates distributed circular positions if multiple drones share the 
+        Updates the current logical positions of the drones,
+        determines the real
+        canvas coordinates for those positions
+        (whether at a hub or mid-connection),
+        and calculates distributed circular
+        positions if multiple drones share the
         same location. Creates canvas image items for new drones.
 
         Args:
-            simulation (list[str]): A list of drone move strings (e.g., 'D1-HubA') for the current turn.
+            simulation (list[str]): A list of drone move strings
+            (e.g., 'D1-HubA') for the current turn.
         """
         self.drone_and_hub = {}
         for drone in simulation:
@@ -114,9 +127,9 @@ class DroneMoves:
         for id, target_name in self.current_drone_pos.items():
             if target_name in self.context.hubs:
                 x = self.load_map.get_x_real_coords(
-                    self.context.hubs[target_name].x)
+                        self.context.hubs[target_name].x)
                 y = self.load_map.get_y_real_coords(
-                    self.context.hubs[target_name].y)
+                        self.context.hubs[target_name].y)
             else:
                 conn_obj = next(
                     (
@@ -170,8 +183,9 @@ class DroneMoves:
                     self.drone_img_ids.update({ids: img_id})
                 self.target_positions[ids] = (x, y)
 
-    def animate_step(self, current_step: int,
-                     max_steps: int, current_index: int) -> None:
+    def animate_step(
+        self, current_step: int, max_steps: int, current_index: int
+    ) -> None:
         """Animate a single step of the drone movement between positions.
 
         Recursively calls itself using Tkinter's `after` method
@@ -195,9 +209,12 @@ class DroneMoves:
                     frames_left = max_steps - current_step + 1
                     dx = (target_x - current_x) / frames_left
                     dy = (target_y - current_y) / frames_left
-                    self.canvas.move(self.drone_img_ids[ids], dx, dy)
-            self.root.after(30, self.animate_step,
-                            current_step + 1, max_steps, current_index)
+                    self.canvas.move(
+                        self.drone_img_ids[ids], dx, dy)
+            self.root.after(
+                30, self.animate_step,
+                current_step + 1, max_steps, current_index
+            )
         else:
             self.root.after(300, self.tick_function, current_index + 1)
 

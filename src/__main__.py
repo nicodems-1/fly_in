@@ -14,9 +14,7 @@ def main() -> None:
     Raises:
         SystemExit: If the user provides an empty string for the file path.
     """
-    file_path: str = input(
-        "Enter the path of the map of your choice: "
-    ).strip()
+    file_path: str = input("Enter the path of the map of your choice: ")
     if not file_path:
         print("Error: No Path given")
         raise SystemExit(1)
@@ -50,3 +48,7 @@ if __name__ == "__main__":
         print("Cannot open the map \n", e)
     except KeyboardInterrupt as e:
         print("\nInterrupted from the user", e)
+    except IsADirectoryError as e:
+        print(f"The path specified is a directory: {e}")
+    except Exception as e:
+        print(f"Unknow error: {e}")
