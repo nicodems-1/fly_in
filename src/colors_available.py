@@ -1,4 +1,12 @@
 def colors() -> list[str]:
+    """Retrieve a comprehensive list of available color names.
+
+    Extracts and returns only the string names from an internal collection
+    of color data that includes names, hex codes, and RGB values.
+
+    Returns:
+        list[str]: A list of color names (e.g., 'alice blue', 'black', 'white')
+    """
     colors: list[tuple[str, str, tuple[int, int, int]]] = [
         ("alice blue", "#f0f8ff", (240, 248, 255)),
         ("AliceBlue", "#f0f8ff", (240, 248, 255)),

@@ -5,13 +5,47 @@ from typing import cast, TypedDict
 
 
 class ParsedHubMeta(TypedDict, total=False):
+    """A dictionary representing the parsed metadata for a hub.
+
+    Attributes:
+        color (str | None): The visualization color of the hub.
+        max_drones (int): The maximum capacity of the hub.
+        zone (ZoneType): The restriction type of the hub.
+    """
     color: str | None
     max_drones: int
     zone: ZoneType
 
 
 class MapParser:
+    """Parses a map configuration file to build a simulation Context.
+
+    Reads a custom text-based map format line by line, validating syntax, 
+    extracting map properties (number of drones, hubs, connections, metadata), 
+    and ensuring logical constraints (e.g., unique names, valid coordinates) 
+    are maintained.
+
+    Attributes:
+        filepath (str): The path to the map configuration file.
+        current_line (int): The current line number being parsed
+        (for error reporting).
+        connections (list[Connection]): The list of parsed valid connections.
+        start (bool): Tracks whether a start hub has been declared.
+        goal (bool): Tracks whether an end hub has been declared.
+        zone_names (list[str]): A list of all declared hub names to prevent
+        duplicates.
+        skipped_line (int): The count of empty or commented lines skipped.
+        nb_drones (int): The total number of drones declared in the file.
+        hubs (dict[str, Hub]): A dictionary mapping hub names to Hub objects.
+        nb_drone_declared (bool): Tracks whether the drone count has
+        been successfully parsed.
+    """
     def __init__(self, filepath: str):
+        """Initialize the MapParser.
+
+        Args:
+            filepath (str): The path to the text file containing the map data.
+        """
         self.filepath = filepath
         self.current_line: int = 0
         self.connections: list[Connection] = []
@@ -24,10 +58,26 @@ class MapParser:
         self.nb_drone_declared: bool = False
 
     def _parsing_meta_hub(self, metadata: str) -> ParsedHubMeta:
+        """Parse the metadata string associated with a hub declaration.
+
+        Args:
+            metadata (str): The metadata substring extracted from the brackets.
+
+        Returns:
+            ParsedHubMeta: A dictionary containing the parsed metadata
+            attributes.
+
+        Raises:
+            ValueError: If the metadata syntax is invalid, contains
+            unrecognized keys,
+                invalid zone types, non-integer max_drones, or duplicate keys.
+        """
         meta_dict: ParsedHubMeta = {}
         zone_type: set[str] = {"normal", "restricted", "blocked", "priority"}
         allowed_types: set[str] = {"zone", "color", "max_drones"}
-
+        zone = False
+        max_drones = False
+        color = False
         if not metadata.strip():
             return meta_dict
 
@@ -51,7 +101,6 @@ class MapParser:
                     f"zone type: {val} does not exist \n"
                     f"Allowed zones types: {zone_type}"
                 )
-                meta_dict["zone"] = cast(ZoneType, val)
             if key == "max_drones":
                 if not val.isdigit():
                     raise ValueError(
@@ -59,12 +108,40 @@ class MapParser:
                         f"max_drones must be a positive integer\n"
                         f"current: <<{val}>>"
                     )
-                    meta_dict["max_drones"] = int(val)
+            if key == "zone":
+                if zone is True:
+                    raise ValueError(f"Line {self.current_line}: "
+                                     f"zone already declared !")
+                zone = True
+                meta_dict["zone"] = cast(ZoneType, val)
+            elif key == "max_drones":
+                if max_drones is True:
+                    raise ValueError(f"Line {self.current_line}: "
+                                     f"max_drones already declared !")
+                max_drones = True
+                meta_dict["max_drones"] = int(val)
             elif key == "color":
+                if color is True:
+                    raise ValueError(f"Line {self.current_line}: "
+                                     f"color already declared !")
+                color = True
                 meta_dict["color"] = val
         return meta_dict
 
     def _parsing_meta_connection(self, metadata: str) -> ConnectionMetadata:
+        """Parse the metadata string associated with a connection declaration.
+
+        Args:
+            metadata (str): The metadata substring extracted from the brackets.
+
+        Returns:
+            ConnectionMetadata: An object containing the parsed connection
+            constraints.
+
+        Raises:
+            ValueError: If the metadata does not contain an equal sign or if
+            the capacity value is not a positive integer.
+        """
         if "=" not in metadata:
             raise ValueError(
                 f"Line {self.current_line}\n"
@@ -82,6 +159,21 @@ class MapParser:
         return ConnectionMetadata(max_link_capacity=int(splitted[1]))
 
     def _parse_nb_drone(self, line: str) -> None:
+        """Parse the line declaring the total number of drones.
+
+        Args:
+            line (str): The line string containing the drone count declaration.
+
+        Raises:
+            ValueError: If the format is incorrect, the value is not
+            a valid
+                positive integer > 0, or if it is not the first valid line
+                in the file.
+        """
+        data = line.split()
+        if len(data) > 2:
+            raise ValueError(f"Line {self.current_line}: "
+                             f"too many values for nb_drones")
         variable_name = line.split()[0]
         if variable_name != "nb_drones:":
             raise ValueError(
@@ -108,6 +200,21 @@ class MapParser:
         self.nb_drones = nb_drones
 
     def _parse_hub(self, line: str) -> None:
+        """Parse a single line declaring a hub.
+
+        Extracts the hub type, name, coordinates, and optional metadata, then 
+        constructs a Hub object and adds it to the parser's state.
+
+        Args:
+            line (str): The line string containing the hub declaration.
+
+        Raises:
+            ValueError: If bracket formatting is invalid, argument counts are
+            wrong,
+                hub types are invalid, names contain illegal characters or are
+                duplicated,
+                coordinates are not integers, or if hubs overlap coordinates.
+        """
         meta: ParsedHubMeta = {}
         if "[" in line or "]" in line:
             match = re.search(r"\[([^\[\]]+)\]\s*$", line)
@@ -198,6 +305,20 @@ class MapParser:
         self.hubs.update({hub_name: new_hub})
 
     def _parse_connection(self, line: str) -> None:
+        """Parse a single line declaring a connection between two hubs.
+
+        Extracts the source and target hubs, validates their existence, parses 
+        optional metadata, and constructs a Connection object.
+
+        Args:
+            line (str): The line string containing the connection declaration.
+
+        Raises:
+            ValueError: If bracket formatting is invalid,
+            arguments are missing,
+                referenced hubs do not exist, or if the connection
+                is a duplicate.
+        """
         meta_parsed = None
         if "[" in line or "]" in line:
             match = re.search(r"\[([^\[\]]+)\]\s*$", line)
@@ -265,6 +386,24 @@ class MapParser:
         self.connections.append(new_co)
 
     def parse(self) -> Context:
+        """Parse the entire map file and construct the simulation context.
+
+        Reads the file line by line, delegating parsing
+        to specific methods based
+        on line prefixes. Validates that all required map
+        components are present
+        before returning the final context.
+
+        Returns:
+            Context: The completed simulation
+            context containing drone counts,
+                hubs, and connections.
+
+        Raises:
+            ValueError: If the file contains unsupported syntax,
+            multiple start/end
+                hubs, or lacks required elements (start, end, drone count).
+        """
         with open(self.filepath) as f:
             for line in f:
                 self.current_line += 1

@@ -5,6 +5,15 @@ from .drone_visual import DroneMoves
 
 
 def main() -> None:
+    """Execute the main workflow for the drone simulation application.
+
+    This function prompts the user for a map file path, parses the map data,
+    initializes the graphical user interface, calculates the drone movements
+    via the fleet handler, and begins the visualization main loop.
+
+    Raises:
+        SystemExit: If the user provides an empty string for the file path.
+    """
     file_path: str = input(
         "Enter the path of the map of your choice: "
     ).strip()
@@ -39,3 +48,5 @@ if __name__ == "__main__":
         print("The path is wrong or the file does not exist", e)
     except PermissionError as e:
         print("Cannot open the map \n", e)
+    except KeyboardInterrupt as e:
+        print("\nInterrupted from the user", e)

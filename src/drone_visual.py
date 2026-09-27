@@ -5,9 +5,49 @@ from .load_map import MapVisualizer
 
 
 class DroneMoves:
+    """Visualizes the movement of a drone fleet on a Tkinter canvas.
+
+    Handles the resizing of drone images, calculation of coordinates for drones 
+    at hubs and along connections, and the frame-by-frame animation of their 
+    movements throughout the simulation.
+
+    Attributes:
+        circle_size (int): The radius size used to calculate
+        spacing and image scaling.
+        moves (list[str]): The chronological list of move strings representing
+        the simulation.
+        root (tk.Tk): The root Tkinter window.
+        context (Context): The simulation context containing map data, hubs,
+        and connections.
+        nb_drone (int): The total number of drones in the simulation.
+        img (tk.PhotoImage): The loaded and resized drone image asset.
+        canvas (tk.Canvas): The Tkinter canvas where drones are drawn.
+        load_map (MapVisualizer): The visualizer instance handling
+        coordinate translations.
+        drone_and_hub (dict[tuple[float, float], list[str]]):
+        Mapping of real canvas coordinates to lists of drone IDs.
+        label (tk.Label): The UI label displaying the current tick counter.
+        drone_img_ids (dict[str, int]):
+        Mapping of drone IDs to their Tkinter canvas image IDs.
+        current_drone_pos (dict[str, str]):
+        Mapping of drone IDs to their current logical target
+        (hub or connection name).
+        target_positions (dict[str, tuple[float, float]]):
+        Mapping of drone IDs to their target (x, y) canvas coordinates.
+    """
     def __init__(
         self, moves: list[str], context: Context, canvas: tk.Canvas,
             root: tk.Tk, my_visual: MapVisualizer, circle_size: int) -> None:
+        """Initialize the DroneMoves visualizer.
+
+        Args:
+            moves (list[str]): The list of simulation steps.
+            context (Context): The map and simulation context.
+            canvas (tk.Canvas): The canvas to draw the drones on.
+            root (tk.Tk): The root UI window.
+            my_visual (MapVisualizer): The map visualization handler.
+            circle_size (int): The base size for radius calculations.
+        """
         self.circle_size: int = circle_size
         self.moves: list[str] = moves
         self.root = root
@@ -26,9 +66,26 @@ class DroneMoves:
         self.target_positions: dict[str, tuple[float, float]] = {}
 
     def get_simulation_turn(self, move: str) -> list[str]:
+        """Split a turn string into individual drone move commands.
+
+        Args:
+            move (str): A space-separated string of
+            drone moves for a single turn.
+
+        Returns:
+            list[str]: A list of individual drone move strings.
+        """
         return move.split()
 
     def resize_drone_img(self) -> int:
+        """Calculate the subsample factor needed to resize the drone image.
+
+        Computes the scaling factor based on the original image dimensions 
+        and the target circle size.
+
+        Returns:
+            int: The calculated subsample factor to apply to the image.
+        """
         width = 2048
         height = 1148
         radius = self.circle_size
@@ -37,7 +94,16 @@ class DroneMoves:
         return n
 
     def process(self, simulation: list[str]) -> None:
-        """Need to create a dict of type dict[position: list[Drone_id]]"""
+        """Process a simulation turn to calculate target canvas coordinates.
+
+        Updates the current logical positions of the drones, determines the real 
+        canvas coordinates for those positions (whether at a hub or mid-connection), 
+        and calculates distributed circular positions if multiple drones share the 
+        same location. Creates canvas image items for new drones.
+
+        Args:
+            simulation (list[str]): A list of drone move strings (e.g., 'D1-HubA') for the current turn.
+        """
         self.drone_and_hub = {}
         for drone in simulation:
             id, target_name = drone.split("-", 1)
@@ -106,6 +172,20 @@ class DroneMoves:
 
     def animate_step(self, current_step: int,
                      max_steps: int, current_index: int) -> None:
+        """Animate a single step of the drone movement between positions.
+
+        Recursively calls itself using Tkinter's `after` method
+        to smoothly interpolate
+        drone images toward their target coordinates. Once the maximum steps
+        are reached,
+        it triggers the next tick function.
+
+        Args:
+            current_step (int): The current frame of the animation.
+            max_steps (int): The total number of frames for
+            the animation sequence.
+            current_index (int): The index of the current simulation turn.
+        """
         if current_step <= max_steps:
             for ids, target_coords in self.target_positions.items():
                 if ids in self.drone_img_ids:
@@ -122,7 +202,15 @@ class DroneMoves:
             self.root.after(300, self.tick_function, current_index + 1)
 
     def tick_function(self, current_index: int) -> None:
-        """process one move from the moves list"""
+        """Process a single simulation turn and trigger its animation sequence.
+
+        If the simulation is not yet complete, increments the tick counter,
+        retrieves the current move set, processes the new target coordinates,
+        and starts the animation step loop.
+
+        Args:
+            current_index (int): The index of the simulation turn to process.
+        """
         if current_index == len(self.moves):
             return
         else:
@@ -134,9 +222,20 @@ class DroneMoves:
             self.animate_step(1, 30, current_index)
 
     def tick_counter(self, current_index: int) -> None:
+        """Update the on-screen label displaying the current tick.
+
+        Args:
+            current_index (int): The current tick/turn number to display.
+        """
         self.label["text"] = f"Tick_counter {current_index}"
 
     def display_drones(self) -> None:
+        """Initialize and start the drone visualization loop.
+
+        Places all drones at the starting hub as a fake initial simulation
+        step,
+        updates the tick counter to 0, and begins the main tick function loop.
+        """
         start_hub_name = next(
             hub for hub in self.context.hubs.values()
             if hub.role == "start_hub"
