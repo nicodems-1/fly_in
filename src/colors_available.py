@@ -762,7 +762,7 @@ def colors() -> list[str]:
         ("YellowGreen", "#9acd32", (154, 205, 50)),
     ]
 
-    color_list: list[str] = []
+    color_list = []
     for color, _, _ in colors:
         color_list.append(color)
     return color_list
