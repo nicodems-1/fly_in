@@ -4,3 +4,4 @@ Chrisnox-209 Fly-in main maps-custom
 __pycache__
 uv.lock
 fly_in_tester.py
+.mypy_cache
