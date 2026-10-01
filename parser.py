@@ -419,6 +419,7 @@ class MapParser:
             for line in f:
                 self.current_line += 1
                 line = line.strip()
+                line = line.partition("#")[0].strip()
                 if line.startswith("#") or not line:
                     self.skipped_line += 1
                     continue
