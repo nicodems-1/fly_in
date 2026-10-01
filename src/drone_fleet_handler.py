@@ -29,11 +29,11 @@ class Drone:
         """
         self.drone_id: str = drone_id
         self.flight_plan: list[str] = []
-        self.current_hub: str = ""
-        self.previous_hub: str = ""
+        self.current_hub: Optional[str] = None
+        self.previous_hub: Optional[str] = None
         self.turns_remaining: int = 0
-        self.reserved_destination: Optional[str] = None
-        self.active_connection: str = ""
+        self.reserved_destination: Optional[Connection] = None
+        self.active_connection: Optional[Connection] = None
 
 
 class DronesFleetHandler:
@@ -134,7 +134,9 @@ class DronesFleetHandler:
         if hub.role in ["start_hub", "end_hub"]:
             return True
         max_cap = getattr(hub.metadata, "max_drones", 1)
-        return getattr(hub, "current_nb_drones", 0) < max_cap
+        count = sum(1 for d in self.drones if d.current_hub == hub.name
+                    or d.reserved_destination == hub.name)
+        return count < max_cap
 
     def has_connection_capacity(self, conn: Connection) -> bool:
         """Determine if a connection can accommodate an
@@ -173,150 +175,34 @@ class DronesFleetHandler:
         """
         current = getattr(conn, "current_drones", 0)
         setattr(conn, "current_drones", current + increment)
-    
+
     def is_in_flight(self, drone: Drone)->bool:
         return drone.turns_remaining > 0
 
     def decrement_transit_time(self, drone: Drone)-> None:
         drone.turns_remaining -1
-    
+
     def has_arrived(self, drone: Drone) -> None:
         return drone.turns_remaining == 0
 
     def process_drone(self, drone: Drone) -> Optional[str]:
-    # 1. GESTION DU DRONE EN VOL
+        """Entry point of the drone for a drone turn"""
         if drone.is_in_flight():
-            drone.decrement_transit_time()
-            if drone.has_arrived():
-                connection = self.get_connection(drone.current_hub, drone.reserved_destination)
-                # trouver la connection empruntée
-                # Libérer la connexion empruntée
-                # Mettre à jour la position sur le hub d'arrivée
-                return "log_atterrissage"
-            return None  # Toujours en l'air ce tour-ci
+            return self._process_in_flight(drone)
+        return self._process_on_ground(drone)
 
-        # 2. PRÉPARATION DU DÉPART (Drone au sol)
-        blocked_hubs = get_saturated_hubs()
-        blocked_connections = get_saturated_connections()
+    def _process_in_flight(self, drone: Drone) -> str | None:
+        drone.decrement_transit_time()
 
-        # 3. CALCUL DU CHEMIN VALIDE
-        path = run_dijkstra(
-            start=drone.current_hub,
-            ignored_nodes=blocked_hubs,
-            ignored_edges=blocked_connections
-        )
+        if drone.active_connection is not None:
+            self.reserve_connection(drone.active_connection, -1)
+            drone.active_connection = None
 
-        if not path or len(path) < 2:
-            return None  # Aucune route libre disponible, le drone patiente
+        if drone.is_in_flight():
+            return None
 
-        # 4. EXÉCUTION DU DÉPART
-        next_hub = path[1]
-        drone.active_connection = get_connection(drone.current_hub, next_hub)
-
-        # Réserver les ressources pour bloquer les drones suivants ce tour-ci
-        reserve_connection(drone.active_connection, +1)
-        # (optionnel selon tes règles métier : reserve_hub(next_hub))
-
-        # Initialiser le vol du drone
-        drone.start_flight(destination=next_hub, duration=conn.weight)
-
-        return "log_depart"
-
-    # def process_drone(self, drone: Drone) -> Optional[str]:
-    #     """Process a single simulation turn for an individual drone.
-
-    #     Handles countdowns for drones in transit, calculates optimal paths,
-    #     checks
-    #     capacity constraints, attempts rerouting if blocked,
-    #     and updates capacities.
-
-    #     Args:
-    #         drone (Drone): The drone to process.
-
-    #     Returns:
-    #         Optional[str]: A log string describing the drone's
-    #         movement (e.g., 'D1-HubA'),
-    #             or None if the drone did not move.
-    #     """
-    #     if drone.turns_remaining > 0:
-    #         drone.turns_remaining -= 1
-    #         if drone.turns_remaining == 0:
-    #             if drone.reserved_destination is None:
-    #                 return None
-
-    #             conn = self.get_connection(
-    #                 drone.previous_hub, drone.reserved_destination
-    #             )
-    #             if conn is None:
-    #                 return None
-
-    #             self.reserve_connection(conn, -1)
-
-    #             drone.current_hub = drone.reserved_destination
-    #             drone.reserved_destination = None
-
-    #             return f"{drone.drone_id}-{drone.current_hub}"
-
-    #         return None
-
-    #     drone.flight_plan = self.path_finder.run_djikstra(drone.current_hub)
-
-    #     if not drone.flight_plan:
-    #         return None
-
-    #     next_hub_name: Optional[str] = None
-    #     for step in drone.flight_plan:
-    #         if step != drone.current_hub:
-    #             next_hub_name = step
-    #             break
-
-    #     if next_hub_name is None:
-    #         return None
-
-    #     conn = self.get_connection(drone.current_hub, next_hub_name)
-    #     if conn is None:
-    #         return None
-
-    #     if (not self.has_hub_capacity(next_hub_name)
-    #             or not self.has_connection_capacity(conn)):
-    #         alt_plan = self.path_finder.run_djikstra(
-    #             drone.current_hub, ignored_nodes=[next_hub_name]
-    #         )
-
-    #         if alt_plan and len(alt_plan) > 1:
-    #             alt_next_hub = alt_plan[1]
-    #             alt_conn = self.get_connection(drone.current_hub, alt_next_hub)
-
-    #             if (
-    #                 alt_conn is not None
-    #                 and self.has_hub_capacity(alt_next_hub)
-    #                 and self.has_connection_capacity(alt_conn)
-    #             ):
-    #                 drone.flight_plan = alt_plan
-    #                 next_hub_name = alt_next_hub
-    #                 conn = alt_conn
-    #             else:
-    #                 return None
-    #         else:
-    #             return None
-
-        self.reserve_hub(drone.current_hub, -1)
-
-        if self.is_zone_restricted(next_hub_name):
-            self.reserve_hub(next_hub_name, 1)
-            self.reserve_connection(conn, 1)
-
-            drone.previous_hub = drone.current_hub
-            drone.reserved_destination = next_hub_name
-            drone.turns_remaining = 1
-
-            conn_name = getattr(conn, "name", f"{conn.source}-{conn.target}")
-            return f"{drone.drone_id}-{conn_name}"
-
-        self.reserve_hub(next_hub_name, 1)
-        drone.previous_hub = drone.current_hub
-        drone.current_hub = next_hub_name
-
+        drone.current_hub = drone.reserved_destination
+        drone.reserved_destination = None
         return f"{drone.drone_id}-{drone.current_hub}"
 
     def handle_drones(self, nb_drones: int) -> list[str]:
