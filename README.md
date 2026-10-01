@@ -16,9 +16,9 @@ The project parses custom map files to build a network of nodes (hubs) and edges
 1. Clone the repository and navigate to the root directory.
 2. Run the application as a Python module:
    ```bash
-   python -m src
+   uv run main.py "example_map.txt"
    ```
-3. The program will prompt you for a map file. Provide the path to one of the text files in the `maps/` directory (e.g., `maps/easy/01_linear_path.txt`).
+3. The program will prompt you for a map file if you run the program without specifying a map. Provide the path to one of the text files in the `maps/` directory (e.g., `maps/easy/01_linear_path.txt`).
    ```text
    Enter the path of the map of your choice: maps/easy/01_linear_path.txt
    ```
