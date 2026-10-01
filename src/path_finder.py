@@ -1,5 +1,6 @@
 import heapq
-from .models import Context, Hub
+from .models import Context, Hub, Connection
+from typing import Optional, Any
 
 
 class PathFinder:
@@ -37,6 +38,24 @@ class PathFinder:
         self.goal = next(
             hub for hub in context.hubs.values() if hub.role == "end_hub"
         ).name
+
+    def get_connection(self, zone1: str, zone2: str) -> Optional[Connection]:
+        """Retrieve the bidirectional connection between two specific zones.
+
+        Args:
+            zone1 (str): The name of the first zone.
+            zone2 (str): The name of the second zone.
+
+        Returns:
+            Optional[Connection]: The connection object linking the two zones,
+            or None if it does not exist.
+        """
+        for conn in self.context.connections:
+            if (conn.source == zone1 and conn.target == zone2) or (
+                conn.source == zone2 and conn.target == zone1
+            ):
+                return conn
+        return None
 
     def build_adjacency_list(self) -> dict[str, list[str]]:
         """Construct a graph adjacency list from the context's connections.
@@ -80,8 +99,8 @@ class PathFinder:
         return 1.0
 
     def update_queue(
-        self, hub_neighboor: list[str], previous_node: str, base_node: str,
-    ignored_nodes: list[str], ignored_connections: list[str])->None:
+        self, hub_neighboor: list[str], previous_node: str,
+            ignored_nodes: list[str], ignored_connections: list[Any]) -> None:
         """Evaluate neighbor hubs and update the pathfinding priority queue.
 
         Calculates cumulative costs to reach neighboring hubs.
@@ -99,7 +118,8 @@ class PathFinder:
         for hub in hub_neighboor:
             if hub in ignored_nodes:
                 continue
-            if conn in ignored_connections:
+            conn = self.get_connection(previous_node, hub)
+            if conn is None or conn in ignored_connections:
                 continue
             meta = self.context.hubs[hub].metadata
             priority_score = 0 if (meta and meta.zone == "priority") else 1
@@ -118,7 +138,8 @@ class PathFinder:
                 heapq.heappush(self.queue,
                                (challenger_cost, priority_score, hub))
 
-    def engine_loop(self, current_hub: str, ignored_nodes: list[str]) -> None:
+    def engine_loop(self, current_hub: str, ignored_nodes: list[str],
+                    ignored_connections: list[str]) -> None:
         """Execute the core Dijkstra pathfinding loop.
 
         Explores the map graph from the current hub, evaluating paths based on
@@ -147,7 +168,8 @@ class PathFinder:
                 continue
             if popped == self.goal:
                 break
-            self.update_queue(self.adj[popped], popped, current_hub, ignored_nodes)
+            self.update_queue(self.adj[popped], popped,
+                              ignored_nodes, ignored_connections)
 
     def build_flight_plan(self, current_hub: str) -> list[str]:
         """Reconstruct the sequence of hubs from the computed path history.
@@ -181,8 +203,8 @@ class PathFinder:
         return flight_plan[::-1]
 
     def run_djikstra(
-        self, current_hub: str, ignored_nodes: list[str] | None = None
-    ) -> list[str]:
+        self, current_hub: str, ignored_connections: list[Any] | None = None,
+            ignored_nodes: list[str] | None = None) -> list[str]:
         """Calculate and return the optimal flight plan to the goal.
 
         Resets pathfinding state, runs the exploration algorithm,
@@ -199,9 +221,11 @@ class PathFinder:
         """
         if ignored_nodes is None:
             ignored_nodes = []
+        if ignored_connections is None:
+            ignored_connections = []
         self.came_from = {}
         self.cost_so_far = {}
         self.queue = []
-        self.engine_loop(current_hub, ignored_nodes)
+        self.engine_loop(current_hub, ignored_nodes, ignored_connections)
         self.flight_plan = self.build_flight_plan(current_hub)
         return self.flight_plan
