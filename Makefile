@@ -30,7 +30,7 @@ lint: install
 		--warn-return-any \
 		--warn-unused-ignores \
 		--ignore-missing-imports \
-		--disallow-untyped-defs
+		--disallow-untyped-defs \
 		--check-untyped-defs
 
 .PHONY: install run debug clean lint lint_strict
