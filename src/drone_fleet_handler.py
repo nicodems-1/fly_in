@@ -33,6 +33,7 @@ class Drone:
         self.previous_hub: str = ""
         self.turns_remaining: int = 0
         self.reserved_destination: Optional[str] = None
+        self.active_connection: str = ""
 
 
 class DronesFleetHandler:
@@ -172,84 +173,132 @@ class DronesFleetHandler:
         """
         current = getattr(conn, "current_drones", 0)
         setattr(conn, "current_drones", current + increment)
+    
+    def is_in_flight(self, drone: Drone)->bool:
+        return drone.turns_remaining > 0
+
+    def decrement_transit_time(self, drone: Drone)-> None:
+        drone.turns_remaining -1
+    
+    def has_arrived(self, drone: Drone) -> None:
+        return drone.turns_remaining == 0
 
     def process_drone(self, drone: Drone) -> Optional[str]:
-        """Process a single simulation turn for an individual drone.
+    # 1. GESTION DU DRONE EN VOL
+        if drone.is_in_flight():
+            drone.decrement_transit_time()
+            if drone.has_arrived():
+                connection = self.get_connection(drone.current_hub, drone.reserved_destination)
+                # trouver la connection empruntée
+                # Libérer la connexion empruntée
+                # Mettre à jour la position sur le hub d'arrivée
+                return "log_atterrissage"
+            return None  # Toujours en l'air ce tour-ci
 
-        Handles countdowns for drones in transit, calculates optimal paths,
-        checks
-        capacity constraints, attempts rerouting if blocked,
-        and updates capacities.
+        # 2. PRÉPARATION DU DÉPART (Drone au sol)
+        blocked_hubs = get_saturated_hubs()
+        blocked_connections = get_saturated_connections()
 
-        Args:
-            drone (Drone): The drone to process.
+        # 3. CALCUL DU CHEMIN VALIDE
+        path = run_dijkstra(
+            start=drone.current_hub,
+            ignored_nodes=blocked_hubs,
+            ignored_edges=blocked_connections
+        )
 
-        Returns:
-            Optional[str]: A log string describing the drone's
-            movement (e.g., 'D1-HubA'),
-                or None if the drone did not move.
-        """
-        if drone.turns_remaining > 0:
-            drone.turns_remaining -= 1
-            if drone.turns_remaining == 0:
-                if drone.reserved_destination is None:
-                    return None
+        if not path or len(path) < 2:
+            return None  # Aucune route libre disponible, le drone patiente
 
-                conn = self.get_connection(
-                    drone.previous_hub, drone.reserved_destination
-                )
-                if conn is None:
-                    return None
+        # 4. EXÉCUTION DU DÉPART
+        next_hub = path[1]
+        drone.active_connection = get_connection(drone.current_hub, next_hub)
 
-                self.reserve_connection(conn, -1)
+        # Réserver les ressources pour bloquer les drones suivants ce tour-ci
+        reserve_connection(drone.active_connection, +1)
+        # (optionnel selon tes règles métier : reserve_hub(next_hub))
 
-                drone.current_hub = drone.reserved_destination
-                drone.reserved_destination = None
+        # Initialiser le vol du drone
+        drone.start_flight(destination=next_hub, duration=conn.weight)
 
-                return f"{drone.drone_id}-{drone.current_hub}"
+        return "log_depart"
 
-            return None
+    # def process_drone(self, drone: Drone) -> Optional[str]:
+    #     """Process a single simulation turn for an individual drone.
 
-        drone.flight_plan = self.path_finder.run_djikstra(drone.current_hub)
+    #     Handles countdowns for drones in transit, calculates optimal paths,
+    #     checks
+    #     capacity constraints, attempts rerouting if blocked,
+    #     and updates capacities.
 
-        if not drone.flight_plan:
-            return None
+    #     Args:
+    #         drone (Drone): The drone to process.
 
-        next_hub_name: Optional[str] = None
-        for step in drone.flight_plan:
-            if step != drone.current_hub:
-                next_hub_name = step
-                break
+    #     Returns:
+    #         Optional[str]: A log string describing the drone's
+    #         movement (e.g., 'D1-HubA'),
+    #             or None if the drone did not move.
+    #     """
+    #     if drone.turns_remaining > 0:
+    #         drone.turns_remaining -= 1
+    #         if drone.turns_remaining == 0:
+    #             if drone.reserved_destination is None:
+    #                 return None
 
-        if next_hub_name is None:
-            return None
+    #             conn = self.get_connection(
+    #                 drone.previous_hub, drone.reserved_destination
+    #             )
+    #             if conn is None:
+    #                 return None
 
-        conn = self.get_connection(drone.current_hub, next_hub_name)
-        if conn is None:
-            return None
+    #             self.reserve_connection(conn, -1)
 
-        if (not self.has_hub_capacity(next_hub_name)
-                or not self.has_connection_capacity(conn)):
-            alt_plan = self.path_finder.run_djikstra(
-                drone.current_hub, ignored_nodes=[next_hub_name]
-            )
+    #             drone.current_hub = drone.reserved_destination
+    #             drone.reserved_destination = None
 
-            if alt_plan and len(alt_plan) > 1:
-                alt_next_hub = alt_plan[1]
-                alt_conn = self.get_connection(drone.current_hub, alt_next_hub)
+    #             return f"{drone.drone_id}-{drone.current_hub}"
 
-                if (
-                    alt_conn is not None
-                    and self.has_hub_capacity(alt_next_hub)
-                    and self.has_connection_capacity(alt_conn)
-                ):
-                    drone.flight_plan = alt_plan
-                    next_hub_name = alt_next_hub
-                    conn = alt_conn
-                else:
-                    return None
-            else:
-                return None
+    #         return None
+
+    #     drone.flight_plan = self.path_finder.run_djikstra(drone.current_hub)
+
+    #     if not drone.flight_plan:
+    #         return None
+
+    #     next_hub_name: Optional[str] = None
+    #     for step in drone.flight_plan:
+    #         if step != drone.current_hub:
+    #             next_hub_name = step
+    #             break
+
+    #     if next_hub_name is None:
+    #         return None
+
+    #     conn = self.get_connection(drone.current_hub, next_hub_name)
+    #     if conn is None:
+    #         return None
+
+    #     if (not self.has_hub_capacity(next_hub_name)
+    #             or not self.has_connection_capacity(conn)):
+    #         alt_plan = self.path_finder.run_djikstra(
+    #             drone.current_hub, ignored_nodes=[next_hub_name]
+    #         )
+
+    #         if alt_plan and len(alt_plan) > 1:
+    #             alt_next_hub = alt_plan[1]
+    #             alt_conn = self.get_connection(drone.current_hub, alt_next_hub)
+
+    #             if (
+    #                 alt_conn is not None
+    #                 and self.has_hub_capacity(alt_next_hub)
+    #                 and self.has_connection_capacity(alt_conn)
+    #             ):
+    #                 drone.flight_plan = alt_plan
+    #                 next_hub_name = alt_next_hub
+    #                 conn = alt_conn
+    #             else:
+    #                 return None
+    #         else:
+    #             return None
 
         self.reserve_hub(drone.current_hub, -1)
 

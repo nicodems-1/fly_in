@@ -41,9 +41,6 @@ class PathFinder:
     def build_adjacency_list(self) -> dict[str, list[str]]:
         """Construct a graph adjacency list from the context's connections.
 
-        Each hub includes itself in its list of neighbors to allow for
-        waiting moves.
-
         Returns:
             dict[str, list[str]]: A dictionary mapping hub names to lists of
             accessible adjacent hub names.
@@ -58,7 +55,6 @@ class PathFinder:
                     next_hubs.append(connection.target)
                 elif connection.target == hub.name:
                     next_hubs.append(connection.source)
-            next_hubs.append(hub.name)
             adjacency_list.update({hub.name: next_hubs})
         return adjacency_list
 
@@ -84,8 +80,8 @@ class PathFinder:
         return 1.0
 
     def update_queue(
-        self, hub_neighboor: list[str], previous_node: str, base_node: str
-    ) -> None:
+        self, hub_neighboor: list[str], previous_node: str, base_node: str,
+    ignored_nodes: list[str], ignored_connections: list[str])->None:
         """Evaluate neighbor hubs and update the pathfinding priority queue.
 
         Calculates cumulative costs to reach neighboring hubs.
@@ -101,13 +97,16 @@ class PathFinder:
             search.
         """
         for hub in hub_neighboor:
+            if hub in ignored_nodes:
+                continue
+            if conn in ignored_connections:
+                continue
             meta = self.context.hubs[hub].metadata
             priority_score = 0 if (meta and meta.zone == "priority") else 1
 
             cost_current = self.get_cost(hub)
             if cost_current == float("inf"):
                 continue
-
             cost_previous = self.cost_so_far[previous_node]
             challenger_cost = cost_current + cost_previous
 
@@ -143,12 +142,12 @@ class PathFinder:
 
         self.came_from[current_hub] = None
         while self.queue:
-            _, _, popped = heapq.heappop(self.queue)
+            cost, _, popped = heapq.heappop(self.queue)
+            if cost > self.cost_so_far.get(popped, float("inf")):
+                continue
             if popped == self.goal:
                 break
-            if popped in ignored_nodes:
-                continue
-            self.update_queue(self.adj[popped], popped, current_hub)
+            self.update_queue(self.adj[popped], popped, current_hub, ignored_nodes)
 
     def build_flight_plan(self, current_hub: str) -> list[str]:
         """Reconstruct the sequence of hubs from the computed path history.
