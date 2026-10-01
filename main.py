@@ -8,8 +8,10 @@ from drone_visual import DroneMoves
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Drone Fleet Simulation (Fly-In)")
-    parser.add_argument("map_file", nargs="?", help="Path of the file to simulate")
+    parser = argparse.ArgumentParser(
+        description="Drone Fleet Simulation (Fly-In)")
+    parser.add_argument(
+        "map_file", nargs="?", help="Path of the file to simulate")
     return parser.parse_args()
 
 
@@ -52,7 +54,8 @@ def main() -> None:
 if __name__ == "__main__":
     try:
         main()
-    except (ValueError, FileNotFoundError, PermissionError, IsADirectoryError) as e:
+    except (ValueError, FileNotFoundError,
+            PermissionError, IsADirectoryError) as e:
         print(f"Error: {e}", file=sys.stderr)
         sys.exit(1)
     except KeyboardInterrupt:
