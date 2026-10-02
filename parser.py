@@ -192,9 +192,9 @@ class MapParser:
                 in the file.
         """
         data = line.split()
-        if len(data) > 2:
+        if len(data) != 2:
             raise ValueError(
-                f"Line {self.current_line}: too many values for nb_drones")
+                f"Line {self.current_line}: incorrect values for nb_drones")
         variable_name = line.split()[0]
         if variable_name != "nb_drones:":
             raise ValueError(
