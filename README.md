@@ -1,4 +1,4 @@
-*This project has been created as part of the 42 curriculum by <your_login_here>.*
+*This project has been created as part of the 42 curriculum by niverdie.*
 
 # FLY IN: Drone Fleet Simulator
 
