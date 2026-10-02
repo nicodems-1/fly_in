@@ -107,10 +107,14 @@ class MapParser:
             if key == "max_drones":
                 if not val.isdigit():
                     raise ValueError(
-                        f"Line {self.current_line}\n"
+                        f"Line {self.current_line}: "
                         f"max_drones must be a positive integer\n"
                         f"current: <<{val}>>"
                     )
+                if int(val) < 1:
+                    raise ValueError(f"Line {self.current_line}"
+                                     f"max_drones must be superior than 1\n"
+                                     f"current: <<{val}>>")
             if key == "zone":
                 if zone is True:
                     raise ValueError(
@@ -157,10 +161,20 @@ class MapParser:
                 f"current: <<{metadata}>>"
             )
         splitted = metadata.split("=")
+        if splitted[0] != "max_link_capacity":
+            raise ValueError(f"Line {self.current_line}: "
+                             f"Only max_link_capacity is accepted as a key in "
+                             f"connection metadata, current: <{splitted[0]}>")
         if splitted[1].isdigit() is False:
             raise ValueError(
-                f"Line {self.current_line}\n"
+                f"Line {self.current_line}: "
                 f"Max_link_capacity must be a positive integer\n"
+                f"Current: <<{splitted[1]}>>"
+            )
+        if int(splitted[1]) < 1:
+            raise ValueError(
+                f"Line {self.current_line}: "
+                f"max_link_capacity should be strictly superior than 0\n"
                 f"Current: <<{splitted[1]}>>"
             )
         return ConnectionMetadata(max_link_capacity=int(splitted[1]))
