@@ -1,5 +1,5 @@
 MAIN = main
-ARGS= ?=
+ARGS ?=
 
 install:
 	uv sync 
@@ -8,7 +8,7 @@ run: install
 	uv run python -m $(MAIN) $(ARGS)
 
 debug: install
-	uv pdbg python $(MAIN) $(ARGS)
+	uv pdb python $(MAIN) $(ARGS)
 
 clean:
 	@echo "Cleaning up Python files"
@@ -33,4 +33,4 @@ lint: install
 		--disallow-untyped-defs \
 		--check-untyped-defs
 
-.PHONY: install run debug clean lint lint_strict
+.PHONY: install run debug clean lint
