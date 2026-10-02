@@ -1,19 +1,5 @@
-MAIN = main
+MAIN = main.py
 ARGS ?=
-
-install:
-	uv sync 
-
-run: install
-	uv run python -m $(MAIN) $(ARGS)
-
-debug: install
-	uv pdb python $(MAIN) $(ARGS)
-
-clean:
-	@echo "Cleaning up Python files"
-	@find . -type d -name "__pycache__" -exec rm -rf {} +
-	@find . -type d -name ".mypy_cache" -exec rm -rf {} +
 
 PY_FILES = main.py \
            parser.py \
@@ -24,7 +10,16 @@ PY_FILES = main.py \
            colors_available.py \
            models.py
 
-lint: install
+install:
+	uv sync
+
+run:
+	uv run python $(MAIN) $(ARGS)
+
+debug:
+	uv run -m pdb $(MAIN) $(ARGS)
+
+lint:
 	uv run flake8 $(PY_FILES)
 	uv run mypy $(PY_FILES) \
 		--warn-return-any \
@@ -32,5 +27,11 @@ lint: install
 		--ignore-missing-imports \
 		--disallow-untyped-defs \
 		--check-untyped-defs
+
+clean:
+	@echo "Cleaning up Python files..."
+	@find . -type d -name "__pycache__" -exec rm -rf {} +
+	@find . -type d -name ".mypy_cache" -exec rm -rf {} +
+	@find . -type d -name ".pytest_cache" -exec rm -rf {} +
 
 .PHONY: install run debug clean lint
