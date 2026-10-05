@@ -210,7 +210,7 @@ class MapParser:
         try:
             int(line.split()[1])
         except ValueError:
-            print(f"Line {self.current_line}: "
+            raise ValueError(f"Line {self.current_line}: "
                   f"nb_drone must be a positive integer")
         nb_drones = int(line.split()[1])
         if nb_drones < 1:
