@@ -105,6 +105,7 @@ class MapVisualizer:
         self.circle_radius_size = int(max(5, min(ideal_size, 40)))
         self.offset_x = (self.screen_width - (true_dx * self.scale)) / 2
         self.offset_y = ((self.screen_height) - (true_dy * self.scale)) / 2
+        self.root.resizable(False, False)
 
     def get_x_real_coords(self, x_coords: float) -> float:
         """Convert a logical map X coordinate to a physical
