@@ -91,6 +91,12 @@ class MapParser:
                 )
             key, val = item.split("=")
             if key in ["max_drones"]:
+                try:
+                    int(val)
+                except ValueError:
+                    raise ValueError(f"Line {self.current_line}: "
+                                     f"max_drones meta is not in "
+                                     f"the right format: {val}")
                 meta_dict["max_drones"] = int(val)
             if key not in allowed_types:
                 raise ValueError(
