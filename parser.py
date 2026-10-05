@@ -400,14 +400,16 @@ class MapParser:
                 f"Invalid connection: {zones}\n"
                 f"Zone <<{conn_2}>> does not exist"
             )
+        if conn_1 == conn_2:
+            raise ValueError(
+                f"Line {self.current_line}: "
+                f"A hub cannot be connected to itself\n"
+                f"Current: {conn_1}-{conn_2}"
+            )
         new_co = Connection(conn_1, conn_2)
         if meta_parsed:
             new_co.metadata = meta_parsed
         for connection in self.connections:
-            if new_co.source == new_co.target:
-                raise ValueError(f"Line {self.current_line}: "
-                                 f"A hub cannot be connected to itself\n"
-                                 f"Current : {new_co.source}-{new_co.target}")
             if connection.source == new_co.target:
                 if connection.target == new_co.source:
                     raise ValueError(
