@@ -212,6 +212,10 @@ class MapParser:
                 f"Line {self.current_line}: "
                 f"nb_drone must be a positive integer > 1"
             )
+        if nb_drones > 150:
+            raise ValueError(f"line: {self.current_line}: "
+                             f"Due to computing limitation, the nb_drone"
+                             f"in the simulation is limited to 150")
         if self.skipped_line + 1 != self.current_line:
             raise ValueError(
                 f"Line {self.current_line} "
