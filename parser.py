@@ -271,11 +271,11 @@ class MapParser:
                 f"Line {self.current_line} "
                 f"Wrong format, missing the semi colon"
             )
-        hub_type = ["start_hub", "end_hub", "hub"]
-        if splitted[0].strip(":") not in hub_type:
+        valid_prefixes = {"start_hub:", "end_hub:", "hub:"}
+        if splitted[0] not in valid_prefixes:
             raise ValueError(
-                f"Line {self.current_line} <<{splitted[0]}>> "
-                f"is not a valid hub_type"
+                f"Line {self.current_line}: <<{splitted[0]}>> is "
+                f"not a valid hub type prefix"
             )
         hub_name = splitted[1]
         if hub_name in self.zone_names:
